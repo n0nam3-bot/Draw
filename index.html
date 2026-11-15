@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f5ee">
+  <meta name="description" content="Turn a typed prompt into a hand-drawn pencil sketch. Free, private, offline-friendly and powered by procedural drawing.">
+  <title>Text-to-Sketch — a little pencil magic</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="site-header">
+      <div class="brand-mark" aria-hidden="true">✎</div>
+      <div>
+        <p class="eyebrow">A tiny drawing studio</p>
+        <h1>Text-to-Sketch</h1>
+      </div>
+      <span class="offline-label">Free · Private · Offline-friendly</span>
+    </header>
+
+    <section class="intro" aria-labelledby="intro-title">
+      <h2 id="intro-title">Imagine it. Type it. Sketch it.</h2>
+      <p>Describe almost anything. Your prompt becomes a wobbly, pencil-style drawing right here in your browser.</p>
+    </section>
+
+    <section class="prompt-panel" aria-label="Sketch prompt">
+      <label for="prompt">What should we draw?</label>
+      <textarea id="prompt" rows="2" maxlength="500" placeholder="A fox reading a book under a tree…" enterkeyhint="go"></textarea>
+      <div class="main-actions">
+        <button id="sketch-button" class="button button-primary" type="button">✎ Sketch It</button>
+        <button id="surprise-button" class="button button-secondary" type="button">Surprise me</button>
+      </div>
+      <div class="examples-heading">Try an idea</div>
+      <div id="examples" class="example-chips" aria-label="Example prompts"></div>
+    </section>
+
+    <section id="canvas-wrap" class="canvas-panel" aria-label="Your sketch">
+      <div class="canvas-toolbar">
+        <div>
+          <h2>Your sketch</h2>
+          <p id="status" class="status" aria-live="polite" aria-atomic="true">Your sketch will appear here.</p>
+        </div>
+        <details class="options-menu">
+          <summary>Options</summary>
+          <div class="options-content">
+            <label class="toggle-row" for="colors">
+              <span><strong>Colored pencils</strong><small>Use gentle category colors</small></span>
+              <input id="colors" type="checkbox">
+            </label>
+            <label for="background">Background
+              <select id="background">
+                <option value="auto" selected>Auto</option>
+                <option value="scene">Scene</option>
+                <option value="none">None</option>
+              </select>
+            </label>
+            <label for="shape">Canvas shape
+              <select id="shape">
+                <option value="auto" selected>Auto (square on phones)</option>
+                <option value="wide">Wide · 800 × 500</option>
+                <option value="square">Square · 600 × 600</option>
+                <option value="tall">Tall · 500 × 700</option>
+              </select>
+            </label>
+          </div>
+        </details>
+      </div>
+      <div class="paper-frame">
+        <canvas id="sketch-canvas" width="800" height="500" role="img" aria-label="Your generated pencil sketch"></canvas>
+      </div>
+      <div class="canvas-actions">
+        <button id="redraw-button" class="button button-secondary" type="button">↻ Redraw</button>
+        <button id="clear-button" class="button button-secondary" type="button">Clear</button>
+        <button id="download-button" class="button button-secondary" type="button">↓ Download PNG</button>
+        <button id="copy-button" class="button button-secondary" type="button">Copy link</button>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>Made with lines, little imperfections, and no AI. Unknown words become their own labelled doodles.</p>
+    </footer>
+  </main>
+
+  <script src="./sketchEngine.js"></script>
+  <script src="./strokeFont.js"></script>
+  <script src="./objects.js"></script>
+  <script src="./library/nature.js"></script>
+  <script src="./library/animals.js"></script>
+  <script src="./library/people.js"></script>
+  <script src="./library/buildings.js"></script>
+  <script src="./library/vehicles.js"></script>
+  <script src="./library/food.js"></script>
+  <script src="./library/household.js"></script>
+  <script src="./library/tools-tech.js"></script>
+  <script src="./library/space-sky.js"></script>
+  <script src="./library/symbols.js"></script>
+  <script src="./library/fantasy.js"></script>
+  <script src="./parser.js"></script>
+  <script src="./layout.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
