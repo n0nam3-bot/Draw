@@ -35,16 +35,34 @@
     return [clamp(x, padX, width - padX), clamp(y, padY, height - padY)];
   }
 
-  function objectScale(def, item, width, height, mode, count) {
+  function objectScale(def, item, width, height, mode, count, grid) {
     const size = Number(item.size) || 1;
     const density = count > 1 ? Math.min(1, 1.3 / Math.sqrt(count)) : 1;
     if (mode === 'object') {
-      const heightScale = height * (count === 1 ? 0.68 : 0.46) / 100;
-      const widthScale = (width * (count === 1 ? 0.62 : 0.25)) / Math.max(35, def.aspect * 100);
-      return clamp(Math.min(heightScale, widthScale) * size, 0.2, 5);
+      const cell = grid || { width: width * 0.84, height: height * 0.82 };
+      const heightScale = cell.height * (count === 1 ? 0.86 : 0.78) / 100;
+      const widthScale = (cell.width * (count === 1 ? 0.84 : 0.78)) / Math.max(35, def.aspect * 100);
+      return clamp(Math.min(heightScale, widthScale) * size, 0.12, 5);
     }
     const baselineScale = def.layer === 'sky' ? height * 0.16 / 100 : (def.layer === 'far' ? height * 0.29 / 100 : height * 0.34 / 100);
     return clamp(baselineScale * size * density, 0.12, 2.2);
+  }
+
+  function objectGrid(count, width, height) {
+    const columns = count === 1 ? 1 : (count <= 4 ? 2 : Math.min(4, Math.ceil(Math.sqrt(count * width / height))));
+    const rows = Math.ceil(count / columns);
+    const usableWidth = width * 0.88;
+    const usableHeight = height * 0.82;
+    return {
+      columns,
+      rows,
+      cellWidth: usableWidth / columns,
+      cellHeight: usableHeight / rows,
+      left: width * 0.06,
+      top: height * 0.09,
+      usableWidth,
+      usableHeight
+    };
   }
 
   function addPlacement(placed, item, def, x, y, scale, seed, itemIndex, instanceIndex) {
@@ -104,6 +122,7 @@
     const horizon = h * (mode === 'scene' ? 0.61 : 0.83);
     const ground = h * 0.91;
     const groups = new Map();
+    const grid = mode === 'object' ? objectGrid(expanded.length, w, h) : null;
 
     expanded.forEach(function (entry, slot) {
       const item = entry.item;
@@ -113,23 +132,19 @@
       const count = entry.count;
       const targetList = groups.get(key) || [];
       const scaleCount = mode === 'object' ? expanded.length : count;
-      const scale = def ? objectScale(def, item, w, h, mode, scaleCount) : objectScale({ aspect: 1, layer: 'near' }, item, w, h, mode, scaleCount);
+      const cell = grid ? { width: grid.cellWidth, height: grid.cellHeight } : null;
+      const scale = def ? objectScale(def, item, w, h, mode, scaleCount, cell) : objectScale({ aspect: 1, layer: 'near' }, item, w, h, mode, scaleCount, cell);
       const layer = def ? def.layer : 'near';
       let x;
       let y;
 
       if (mode === 'object') {
-        if (expanded.length === 1) {
-          x = w * 0.5;
-          y = h * 0.79;
-        } else {
-          const columns = Math.min(expanded.length, expanded.length <= 3 ? expanded.length : 4);
-          const row = Math.floor(slot / columns);
-          const col = slot % columns;
-          const rows = Math.ceil(expanded.length / columns);
-          x = w * ((col + 0.5) / columns);
-          y = h * (0.69 + row * (0.19 / Math.max(1, rows - 1)));
-        }
+        const row = Math.floor(slot / grid.columns);
+        const col = slot % grid.columns;
+        x = grid.left + (col + 0.5) * grid.cellWidth;
+        // Items use a baseline near the bottom of each grid cell, so the
+        // full height of each drawing stays inside its own row.
+        y = grid.top + (row + 1) * grid.cellHeight - grid.cellHeight * 0.08;
       } else if (item.region) {
         const position = chooseRegion(item.region, w, h, random);
         x = position[0];
@@ -163,10 +178,11 @@
       const objectHeight = scale * 100;
       let attempt = 0;
       while (attempt < 30 && placed.some(function (other) {
-        if ((other.def.layer || 'near') !== layer || other.itemIndex === index) return false;
+        const otherDef = other.def || { layer: 'near', aspect: 0.6 };
+        if ((otherDef.layer || 'near') !== layer || other.itemIndex === index) return false;
         const dx = Math.abs(other.x - x);
         const dy = Math.abs(other.y - y);
-        return dx < (objectWidth + other.def.aspect * other.scale * 100) * 0.31 && dy < (objectHeight + other.scale * 100) * 0.26;
+        return dx < (objectWidth + (otherDef.aspect || 0.6) * other.scale * 100) * 0.31 && dy < (objectHeight + other.scale * 100) * 0.26;
       })) {
         x = clamp(x + (random() - 0.5) * w * 0.21, objectWidth * 0.55, w - objectWidth * 0.55);
         y = clamp(y + (random() - 0.5) * h * 0.13, objectHeight * 0.55, h - h * 0.06);
@@ -373,6 +389,22 @@
     }
   }
 
+  function drawGroundShadow(engine, item) {
+    if (!item.def || item.def.layer === 'sky' || item.def.anchor === 'water') return;
+    const modifiers = item.opts && item.opts.modifiers ? item.opts.modifiers : [];
+    if (modifiers.includes('flying') || modifiers.includes('floating')) return;
+    const ctx = engine.ctx;
+    const aspect = item.def.aspect || 1;
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = '#837b70';
+    ctx.globalAlpha = item.def.layer === 'far' ? 0.055 : 0.09;
+    ctx.beginPath();
+    ctx.ellipse(item.x, item.y + item.scale * 2.5, Math.max(3, item.scale * Math.min(0.48, aspect * 0.38) * 100), Math.max(1.2, item.scale * 2.8), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawModifiers(engine, placed) {
     placed.forEach(function (item) {
       const mods = item.opts.modifiers || [];
@@ -416,8 +448,15 @@
     });
 
     ordered.forEach(function (item) {
-      if (item.def) S.drawObject(engine, item.def, item.x, item.y, item.scale, item.seed, item.opts);
-      else S.doodle(engine, item.word, item.x, item.y, item.scale, item.seed);
+      drawGroundShadow(engine, item);
+      if (item.def) {
+        const layer = item.def.layer || 'near';
+        const opacity = layer === 'far' ? 0.58 : (layer === 'mid' ? 0.78 : 1);
+        const options = Object.assign({}, item.opts, { opacity });
+        S.drawObject(engine, item.def, item.x, item.y, item.scale, item.seed, options);
+      } else {
+        S.doodle(engine, item.word, item.x, item.y, item.scale, item.seed);
+      }
     });
     drawModifiers(engine, ordered);
 

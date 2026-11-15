@@ -31,7 +31,10 @@
   }
 
   function localPoint(x, y, def, originX, originY, scale) {
-    return [originX + (x - 50 * def.aspect) * scale, originY + (y - 100) * scale];
+    // Library recipes are authored on a 0..100 square grid. Aspect is a
+    // layout hint, not a coordinate offset; using it here shifted wide and
+    // narrow drawings away from their true center.
+    return [originX + (x - 50) * scale, originY + (y - 100) * scale];
   }
 
   function drawRecipe(engine, def, x, y, scale, options) {
@@ -46,7 +49,12 @@
       minimal: { alpha: 0.52, width: 0.9, passes: 1, wobble: 0.015 }
     };
     const style = detailStyles[opts.detail] || {};
-    const strokeOptions = function (custom) { return Object.assign({}, style, custom || {}); };
+    const strokeOptions = function (custom) {
+      const result = Object.assign({}, style, custom || {});
+      const opacity = Number.isFinite(opts.opacity) ? Math.max(0, Math.min(1, opts.opacity)) : 1;
+      result.alpha = (Number.isFinite(result.alpha) ? result.alpha : 0.66) * opacity;
+      return result;
+    };
     engine.setColor(opts.color || null);
     shapes.forEach(function (shape) {
       if (!Array.isArray(shape) || !shape.length) return;

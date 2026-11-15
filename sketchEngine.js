@@ -130,15 +130,34 @@
 
   SketchEngine.prototype.sketchCurve = function sketchCurve(points, options) {
     if (!Array.isArray(points) || points.length < 2) return;
-    const sampled = [];
-    for (let i = 0; i < points.length - 1; i += 1) {
-      const current = points[i];
-      const next = points[i + 1];
-      const midpoint = [(current[0] + next[0]) / 2, (current[1] + next[1]) / 2];
-      if (i === 0) sampled.push([finite(current[0]), finite(current[1])]);
-      sampled.push(midpoint);
+    const clean = points.map(function (point) {
+      return [finite(point[0]), finite(point[1])];
+    });
+    const sampled = [clean[0]];
+
+    // Catmull-Rom sampling passes through the authored points while removing
+    // the angular joins created by the earlier midpoint-only approximation.
+    for (let i = 0; i < clean.length - 1; i += 1) {
+      const p0 = clean[Math.max(0, i - 1)];
+      const p1 = clean[i];
+      const p2 = clean[i + 1];
+      const p3 = clean[Math.min(clean.length - 1, i + 2)];
+      const dx = p2[0] - p1[0];
+      const dy = p2[1] - p1[1];
+      const steps = clamp(Math.ceil(Math.sqrt(dx * dx + dy * dy) / 7), 5, 18);
+      for (let step = 1; step <= steps; step += 1) {
+        const t = step / steps;
+        const t2 = t * t;
+        const t3 = t2 * t;
+        const x = 0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t +
+          (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+          (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3);
+        const y = 0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t +
+          (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+          (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3);
+        sampled.push([finite(x), finite(y)]);
+      }
     }
-    sampled.push(points[points.length - 1].map(function (v) { return finite(v); }));
     this._stroke(sampled, options);
   };
 
@@ -172,7 +191,7 @@
 
   SketchEngine.prototype.sketchEllipse = function sketchEllipse(cx, cy, rx, ry, fillHatch, options) {
     const points = [];
-    const segments = 28;
+    const segments = 36;
     const wobble = finite((options || {}).wobble, 0.035);
     for (let i = 0; i <= segments; i += 1) {
       const angle = (Math.PI * 2 * i) / segments;
@@ -224,7 +243,7 @@
     const ctx = this.ctx;
     const extent = Math.max(this.width, this.height) * 0.72;
     const requestedStep = clamp(finite(spacing, 7), 3, 24);
-    const step = Math.max(requestedStep, (extent * 2) / 72);
+    const step = Math.max(requestedStep, (extent * 2) / 96);
     const direction = finite(angle, 0.8);
     const color = this.currentColor || '#77716a';
     const drawSet = (rotation) => {

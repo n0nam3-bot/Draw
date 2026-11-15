@@ -71,6 +71,36 @@ input:focus-visible {
   border-bottom: 1px solid rgba(125, 111, 92, 0.2);
 }
 
+.site-nav {
+  margin-left: auto;
+}
+
+.header-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid #c9bdad;
+  border-radius: 11px;
+  color: var(--ink);
+  background: #fffdf8;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header-link:hover {
+  background: #f0e9dd;
+}
+
+.header-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
 .brand-mark {
   display: grid;
   width: 46px;
@@ -109,7 +139,6 @@ h1 {
 }
 
 .offline-label {
-  margin-left: auto;
   color: var(--muted);
   font-size: 11px;
   text-align: right;
@@ -419,8 +448,16 @@ textarea::placeholder {
   }
 
   .offline-label {
-    max-width: 88px;
-    font-size: 9px;
+    display: none;
+  }
+
+  .site-nav {
+    margin-left: auto;
+  }
+
+  .header-link {
+    min-height: 42px;
+    padding: 8px 11px;
   }
 
   .intro {
