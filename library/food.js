@@ -26,4 +26,41 @@
     ['poly', [24, 17, 28, 8, 32, 17], true, false], ['poly', [46, 10, 50, 0, 54, 10], true, false],
     ['poly', [68, 17, 72, 8, 76, 17], true, false]
   ]);
+  add('orange', ['oranges'], 0.9, [
+    ['ellipse', 50, 58, 30, 29, true], ['line', 50, 29, 50, 23], ['ellipse', 61, 26, 10, 5, false],
+    ['dot', 42, 48, 1], ['dot', 59, 62, 1], ['dot', 38, 69, 1], ['dot', 66, 46, 1],
+    ['curve', [50, 23, 54, 19, 60, 20]]
+  ]);
+  add('grapes', ['grape', 'bunch of grapes'], 0.9, [
+    ['curve', [50, 13, 48, 6, 55, 3, 62, 8]], ['ellipse', 43, 29, 10, 10, false],
+    ['ellipse', 58, 29, 10, 10, false], ['ellipse', 34, 46, 10, 10, false],
+    ['ellipse', 50, 46, 10, 10, false], ['ellipse', 66, 46, 10, 10, false],
+    ['ellipse', 42, 63, 10, 10, false], ['ellipse', 58, 63, 10, 10, false],
+    ['ellipse', 50, 80, 10, 10, false], ['line', 50, 12, 50, 18]
+  ]);
+  add('sandwich', ['sandwiches'], 1.25, [
+    ['poly', [12, 38, 50, 10, 89, 38], true, false], ['poly', [12, 38, 89, 38, 78, 77, 24, 77], true, false],
+    ['curve', [17, 45, 37, 38, 60, 48, 84, 42]], ['line', 22, 55, 80, 55],
+    ['curve', [25, 66, 45, 58, 62, 68, 77, 61]], ['line', 24, 78, 78, 78],
+    ['line', 12, 38, 24, 77], ['line', 89, 38, 78, 77]
+  ]);
+  add('hot dog', ['hotdog', 'hot dogs'], 1.4, [
+    ['ellipse', 50, 52, 45, 22, false], ['ellipse', 50, 52, 34, 12, false],
+    ['curve', [18, 49, 27, 27, 73, 27, 82, 49]], ['curve', [18, 56, 27, 78, 73, 78, 82, 56]],
+    ['curve', [23, 51, 36, 39, 45, 61, 58, 46, 74, 53]], ['line', 14, 43, 86, 43],
+    ['line', 14, 62, 86, 62]
+  ]);
+  add('donut', ['doughnut', 'donuts', 'doughnuts'], 1.0, [
+    ['ellipse', 50, 54, 38, 31, false], ['ellipse', 50, 54, 13, 12, false],
+    ['curve', [16, 49, 23, 22, 77, 22, 84, 49]], ['curve', [18, 61, 34, 78, 67, 79, 82, 60]],
+    ['line', 31, 35, 37, 30], ['line', 62, 32, 67, 38], ['line', 71, 60, 65, 65],
+    ['line', 34, 64, 29, 59], ['dot', 49, 29, 2], ['dot', 58, 72, 2]
+  ]);
+  add('cupcake', ['cupcakes'], 0.9, [
+    ['poly', [26, 53, 74, 53, 66, 92, 34, 92], true, false],
+    ['ellipse', 50, 47, 26, 22, false], ['ellipse', 36, 40, 14, 15, false],
+    ['ellipse', 64, 40, 14, 15, false], ['ellipse', 50, 26, 13, 15, false],
+    ['dot', 50, 10, 3], ['line', 36, 62, 64, 62], ['line', 39, 76, 61, 76],
+    ['line', 44, 54, 44, 91], ['line', 56, 54, 56, 91]
+  ]);
 })(window.Sketchbook);

@@ -51,4 +51,39 @@
     ['curve', [47, 27, 36, 4, 28, 10]], ['curve', [53, 27, 65, 4, 74, 10]],
     ['dot', 28, 36, 3], ['dot', 72, 36, 3]
   ], 'mid');
+  add('cow', ['cows', 'calf'], 1.2, [
+    ['ellipse', 48, 61, 35, 24, true], ['ellipse', 78, 39, 18, 18, false], ['ellipse', 91, 43, 9, 8, false],
+    ['poly', [68, 26, 67, 10, 80, 19], true, false], ['poly', [84, 24, 98, 14, 96, 32], true, false],
+    ['rect', 25, 78, 8, 21], ['rect', 63, 78, 8, 21], ['ellipse', 37, 55, 10, 8, false],
+    ['dot', 82, 35, 1.8], ['dot', 94, 43, 1.2], ['curve', [14, 56, 5, 48, 9, 39]]
+  ]);
+  add('pig', ['pigs', 'piglet'], 1.0, [
+    ['ellipse', 48, 62, 33, 25, true], ['ellipse', 75, 42, 21, 19, false], ['ellipse', 91, 48, 10, 8, false],
+    ['poly', [61, 30, 59, 12, 76, 25], true, false], ['poly', [79, 25, 96, 13, 93, 34], true, false],
+    ['dot', 87, 47, 1.5], ['dot', 95, 47, 1.5], ['line', 29, 81, 28, 99], ['line', 58, 82, 61, 99],
+    ['curve', [15, 58, 3, 52, 9, 42, 16, 49]]
+  ]);
+  add('lion', ['lions', 'lioness'], 1.15, [
+    ['ellipse', 48, 55, 39, 37, true], ['ellipse', 51, 54, 24, 25, false], ['ellipse', 38, 47, 4, 4, false],
+    ['ellipse', 64, 47, 4, 4, false], ['poly', [47, 58, 52, 62, 57, 58], false, false],
+    ['curve', [49, 65, 52, 71, 57, 65]], ['line', 28, 81, 24, 100], ['line', 68, 81, 74, 100],
+    ['curve', [82, 63, 99, 54, 94, 40]], ['ellipse', 95, 38, 5, 6, false]
+  ]);
+  add('bear', ['bears', 'grizzly'], 1.1, [
+    ['ellipse', 49, 62, 32, 27, true], ['ellipse', 53, 31, 23, 22, false], ['ellipse', 37, 15, 8, 9, false],
+    ['ellipse', 69, 15, 8, 9, false], ['ellipse', 53, 42, 12, 9, false], ['dot', 46, 29, 2],
+    ['dot', 61, 29, 2], ['dot', 53, 40, 2], ['line', 30, 82, 27, 100], ['line', 68, 82, 72, 100]
+  ]);
+  add('snake', ['snakes', 'serpent'], 1.3, [
+    ['curve', [5, 92, 25, 78, 75, 87, 87, 64, 95, 48, 78, 34, 56, 47, 32, 41, 26, 22]],
+    ['ellipse', 26, 18, 15, 12, false], ['dot', 21, 16, 1.8], ['dot', 31, 16, 1.8],
+    ['curve', [25, 27, 29, 34, 36, 31]], ['line', 18, 27, 11, 32], ['line', 34, 27, 41, 31],
+    ['curve', [50, 54, 56, 61, 65, 59]], ['curve', [68, 76, 74, 69, 80, 70]]
+  ]);
+  add('turtle', ['turtles', 'tortoise'], 1.2, [
+    ['ellipse', 48, 57, 32, 25, true], ['curve', [19, 57, 24, 26, 53, 23, 78, 55]],
+    ['ellipse', 86, 54, 12, 12, false], ['dot', 90, 51, 1.8], ['ellipse', 23, 82, 9, 8, false],
+    ['ellipse', 70, 82, 9, 8, false], ['ellipse', 29, 34, 8, 8, false], ['ellipse', 65, 34, 8, 8, false],
+    ['line', 42, 45, 49, 58], ['line', 60, 44, 53, 58], ['line', 49, 58, 48, 73]
+  ]);
 })(window.Sketchbook);
