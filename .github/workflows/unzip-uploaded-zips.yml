@@ -1,1 +1,182 @@
+# Automatically unpack ZIP uploads committed to the main branch.
+# ZIP paths are preserved relative to the repository root.
 
+name: Unzip uploaded ZIP files
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unzip-uploaded-zips-main
+  cancel-in-progress: false
+
+jobs:
+  unzip:
+    name: Extract uploaded archives
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Safely extract ZIP files
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import os
+          import shutil
+          import stat
+          import subprocess
+          import sys
+          import zipfile
+
+          REPO = Path.cwd().resolve()
+          MAX_FILES = 2500
+          MAX_TOTAL_BYTES = 100 * 1024 * 1024
+          MAX_FILE_BYTES = 25 * 1024 * 1024
+          PROTECTED_ROOTS = {
+              ".github", "assets", "docs", "examples", "fonts", "images",
+              "library", "public", "scripts", "src", "styles", "tests",
+          }
+
+          def tracked_zip_files():
+              result = subprocess.run(
+                  ["git", "ls-files", "-z"],
+                  check=True,
+                  stdout=subprocess.PIPE,
+              )
+              paths = [os.fsdecode(item) for item in result.stdout.split(b"\0") if item]
+              return [
+                  (REPO / relative)
+                  for relative in paths
+                  if Path(relative).suffix.lower() == ".zip"
+                  and (REPO / relative).is_file()
+              ]
+
+          def safe_member_path(info):
+              name = info.filename
+              if not name or "\\" in name or "\0" in name:
+                  raise ValueError(f"Unsafe ZIP entry name: {name!r}")
+              if name.startswith("/") or name.startswith("\\"):
+                  raise ValueError(f"Absolute ZIP entry is not allowed: {name!r}")
+
+              path = PurePosixPath(name)
+              parts = path.parts
+              if not parts or any(part in ("..", ".") for part in parts):
+                  raise ValueError(f"ZIP entry escapes its destination: {name!r}")
+              if len(parts[0]) >= 2 and parts[0][1] == ":":
+                  raise ValueError(f"Windows drive paths are not allowed: {name!r}")
+              if ".git" in parts:
+                  raise ValueError("ZIP files may not write into the Git metadata folder")
+              if "__MACOSX" in parts or path.name == ".DS_Store":
+                  return None
+
+              mode = (info.external_attr >> 16) & 0xFFFF
+              if stat.S_ISLNK(mode):
+                  raise ValueError(f"Symbolic links are not allowed in ZIP files: {name!r}")
+              return path
+
+          def extract_archive(archive_path):
+              print(f"Checking {archive_path.relative_to(REPO)}")
+              with zipfile.ZipFile(archive_path, "r") as archive:
+                  entries = []
+                  seen_files = set()
+                  total_bytes = 0
+
+                  for info in archive.infolist():
+                      relative = safe_member_path(info)
+                      if relative is None or info.is_dir():
+                          continue
+                      if relative in seen_files:
+                          raise ValueError(f"Duplicate ZIP entry: {relative.as_posix()}")
+                      seen_files.add(relative)
+                      if info.file_size > MAX_FILE_BYTES:
+                          raise ValueError(f"ZIP entry is too large: {relative.as_posix()}")
+                      total_bytes += info.file_size
+                      entries.append((info, relative))
+
+                  if len(entries) > MAX_FILES:
+                      raise ValueError(f"ZIP contains more than {MAX_FILES} files")
+                  if total_bytes > MAX_TOTAL_BYTES:
+                      raise ValueError("ZIP expands beyond the 100 MB safety limit")
+                  if not entries:
+                      raise ValueError("ZIP contains no usable files")
+
+                  bad_entry = archive.testzip()
+                  if bad_entry:
+                      raise ValueError(f"ZIP integrity check failed at: {bad_entry}")
+
+                  # Mobile file managers often add one outer folder when creating a ZIP.
+                  # Remove that wrapper only when every file is inside it and it is not
+                  # one of the real project folders (such as library/ or .github/).
+                  top_level = {relative.parts[0] for _, relative in entries}
+                  wrapper = None
+                  if len(top_level) == 1:
+                      candidate = next(iter(top_level))
+                      if candidate not in PROTECTED_ROOTS:
+                          wrapper = candidate
+
+                  written = 0
+                  for info, original in entries:
+                      relative = original
+                      if wrapper is not None:
+                          relative = PurePosixPath(*original.parts[1:])
+                          if not relative.parts:
+                              continue
+
+                      destination = (REPO / Path(*relative.parts)).resolve()
+                      try:
+                          destination.relative_to(REPO)
+                      except ValueError:
+                          raise ValueError(
+                              f"ZIP entry resolves outside the repository: {original.as_posix()}"
+                          )
+
+                      if destination == archive_path.resolve():
+                          raise ValueError("A ZIP file cannot overwrite itself")
+
+                      destination.parent.mkdir(parents=True, exist_ok=True)
+                      with archive.open(info, "r") as source, destination.open("wb") as target:
+                          shutil.copyfileobj(source, target)
+                      written += 1
+                      print(f"  Extracted {relative.as_posix()}")
+
+              archive_path.unlink()
+              print(f"Removed uploaded archive: {archive_path.relative_to(REPO)}")
+              return written
+
+          archives = tracked_zip_files()
+          if not archives:
+              print("No tracked ZIP files found; nothing to extract.")
+              sys.exit(0)
+
+          extracted = 0
+          for archive_path in archives:
+              extracted += extract_archive(archive_path)
+
+          print(f"Finished. Extracted {extracted} file(s).")
+          PY
+
+      - name: Commit extracted files and remove ZIP archives
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+
+          if git diff --cached --quiet; then
+            echo "No extracted changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Extract uploaded ZIP archives"
+          git push
