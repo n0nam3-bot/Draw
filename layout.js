@@ -44,7 +44,7 @@
       const widthScale = (cell.width * (count === 1 ? 0.84 : 0.78)) / Math.max(35, def.aspect * 100);
       return clamp(Math.min(heightScale, widthScale) * size, 0.12, 5);
     }
-    const baselineScale = def.layer === 'sky' ? height * 0.16 / 100 : (def.layer === 'far' ? height * 0.29 / 100 : height * 0.34 / 100);
+    const baselineScale = def.layer === 'sky' ? height * 0.12 / 100 : (def.layer === 'far' ? height * 0.20 / 100 : (def.layer === 'mid' ? height * 0.27 / 100 : height * 0.29 / 100));
     return clamp(baselineScale * size * density, 0.12, 2.2);
   }
 
@@ -164,7 +164,8 @@
       }
 
       if (count > 1 && mode === 'scene') {
-        const spacing = Math.min(w * 0.13, 48 * scale);
+        const groupWidth = (def ? def.aspect : 0.65) * scale * 100;
+        const spacing = Math.max(groupWidth * 0.92, 48 * scale);
         x += (entry.instance - (count - 1) / 2) * spacing;
         y += Math.sin(entry.instance * 1.7) * h * 0.025;
       }
@@ -276,6 +277,69 @@
       });
     });
 
+    // Purpose-built composition for common outdoor scenes. The previous
+    // random placement let counted objects overlap and treated birds as ground
+    // animals. These deterministic anchors keep the focal subject readable.
+    if (mode === 'scene') {
+      const group = function (id) {
+        return placed.filter(function (entry) { return entry.def && entry.def.id === id; });
+      };
+      const houses = group('house');
+      const rivers = group('river');
+      const trees = group('pine-tree');
+      const suns = group('sun');
+      const birds = group('bird');
+
+      if (houses.length && rivers.length) {
+        const houseScale = Math.min(h * 0.26 / 100, w * 0.27 / 100);
+        houses.forEach(function (entry, index) {
+          entry.x = w * (houses.length === 1 ? 0.54 : 0.47 + index * 0.15);
+          entry.y = h * 0.92;
+          entry.scale = houseScale;
+        });
+        const riverScale = Math.min(h * 0.25 / 100, w * 0.23 / 100);
+        rivers.forEach(function (entry) {
+          entry.x = w * 0.84;
+          entry.y = h * 0.96;
+          entry.scale = riverScale;
+        });
+      } else {
+        houses.forEach(function (entry, index) {
+          entry.x = w * (houses.length === 1 ? 0.52 : 0.38 + index * 0.22);
+          entry.y = h * 0.92;
+          entry.scale = Math.min(h * 0.27 / 100, w * 0.27 / 100);
+        });
+        rivers.forEach(function (entry) {
+          entry.x = w * 0.68;
+          entry.y = h * 0.96;
+          entry.scale = Math.min(h * 0.25 / 100, w * 0.24 / 100);
+        });
+      }
+
+      if (trees.length) {
+        const treeScale = Math.min(h * (trees.length > 2 ? 0.19 : 0.22) / 100, w * 0.19 / 100);
+        trees.forEach(function (entry, index) {
+          const start = houses.length ? 0.10 : 0.16;
+          const end = houses.length ? 0.285 : 0.84;
+          entry.x = trees.length === 1 ? w * start : w * (start + (end - start) * index / (trees.length - 1));
+          entry.y = h * 0.93;
+          entry.scale = treeScale;
+        });
+      }
+
+      suns.forEach(function (entry) {
+        entry.x = w * 0.81;
+        entry.y = h * 0.23;
+        entry.scale = Math.min(h * 0.13 / 100, w * 0.13 / 100);
+      });
+      birds.forEach(function (entry, index) {
+        const n = birds.length;
+        entry.x = w * (n === 1 ? 0.56 : 0.38 + 0.31 * index / (n - 1));
+        entry.y = h * (0.19 + (index % 2) * 0.065);
+        entry.scale = Math.min(h * 0.075 / 100, w * 0.075 / 100);
+      });
+    }
+
     // Add automatic scenery without changing the prompt's recognized-object list.
     if (mode === 'scene') {
       const setting = scene.stage && scene.stage.setting;
@@ -344,6 +408,12 @@
       ctx.restore();
 
       engine.sketchCurve([[0, horizon], [w * 0.22, horizon - 5], [w * 0.48, horizon + 3], [w * 0.74, horizon - 4], [w, horizon]], { alpha: 0.34, width: 1.1, passes: 2 });
+      // Gentle distant hills give ordinary outdoor scenes depth without forcing
+      // a mountain background into every prompt.
+      if (!['beach', 'ocean', 'underwater', 'space', 'indoors'].includes(stage.setting)) {
+        engine.sketchCurve([[0, h * 0.77], [w * 0.13, h * 0.69], [w * 0.28, h * 0.75], [w * 0.43, h * 0.68], [w * 0.61, h * 0.74], [w * 0.82, h * 0.68], [w, h * 0.75]], { alpha: 0.16, width: 1, passes: 1 });
+        engine.sketchCurve([[0, h * 0.81], [w * 0.24, h * 0.77], [w * 0.47, h * 0.8], [w * 0.71, h * 0.76], [w, h * 0.8]], { alpha: 0.12, width: 0.8, passes: 1 });
+      }
       engine.sketchCurve([[0, h * 0.91], [w * 0.26, h * 0.9], [w * 0.55, h * 0.92], [w * 0.82, h * 0.9], [w, h * 0.91]], { alpha: 0.22, width: 0.8, passes: 1 });
       if (stage.time === 'night') {
         engine.withClipRect(0, 0, w, horizon, function () { engine.hatch(0.92, 15, false); });

@@ -772,4 +772,255 @@
   }
   add('lighthouse', ['beacon'], 'buildings', 0.85, lighthouse, { anchors: { top: [0.5, 0.03], inside: [0.5, 0.45] } });
 
+
+
+  // SCENE ILLUSTRATIONS ------------------------------------------------------
+  // These replace the original geometric house/tree/river/sun/bird recipes.
+  // They remain procedural, deterministic pencil drawings and keep the same
+  // registered IDs and aliases used by existing prompts.
+
+  function detailedHouse(e) {
+    shade(e, 52, 97, 46, 3, 42);
+
+    // Chimney and cap are drawn first so the roof naturally overlaps them.
+    polygon(e, [70, 20, 70, 3, 82, 3, 82, 37, 75, 32, 75, 20], true, false);
+    line(e, 67, 3, 85, 3, BASE);
+    line(e, 70, 10, 81, 10, LIGHT);
+    line(e, 70, 17, 77, 17, LIGHT);
+    line(e, 77, 23, 82, 23, LIGHT);
+    line(e, 75, 29, 82, 29, LIGHT);
+
+    // Front and right side wall planes create a modest three-quarter view.
+    polygon(e, [15, 47, 68, 47, 68, 94, 15, 94], true, false);
+    polygon(e, [68, 47, 88, 35, 88, 83, 68, 94], true, true, SHADE);
+    line(e, 15, 47, 15, 94, BASE);
+    line(e, 68, 47, 68, 94, BASE);
+    line(e, 88, 35, 88, 83, BASE);
+    for (let y = 53; y <= 89; y += 6) {
+      line(e, 17, y, 66, y + 0.2, LIGHT);
+      line(e, 70, y - 2, 86, y - 10, SHADE);
+    }
+    // A few short grain marks suggest weathered boards without cluttering the wall.
+    for (let i = 0; i < 12; i += 1) {
+      const x = 18 + ((i * 13) % 47);
+      const y = 50 + ((i * 17) % 39);
+      line(e, x, y, x + 2 + (i % 3), y + 0.3, SHADE);
+    }
+
+    // Front gable roof and the deeper roof plane on the right.
+    polygon(e, [7, 48, 43, 8, 79, 48, 72, 54, 43, 21, 14, 54], true, false);
+    polygon(e, [43, 8, 96, 36, 89, 49, 79, 48, 43, 21], true, true, SHADE);
+    line(e, 7, 48, 43, 8, BASE);
+    line(e, 43, 8, 79, 48, BASE);
+    line(e, 43, 8, 96, 36, BASE);
+    line(e, 96, 36, 89, 49, BASE);
+    line(e, 14, 54, 43, 21, BASE);
+    line(e, 43, 21, 72, 54, BASE);
+    line(e, 72, 54, 89, 49, BASE);
+
+    // Individual slate marks follow each roof slope instead of crossing it.
+    for (let row = 0; row < 7; row += 1) {
+      const y = 14 + row * 4.6;
+      const leftX = 43 - (y - 8) * 0.83;
+      const rightX = 43 + (y - 8) * 0.83;
+      for (let col = 0; col < 3; col += 1) {
+        const lx = leftX + 3 + col * 5;
+        const rx = rightX + 3 + col * 5;
+        if (lx < 42) line(e, lx, y + 2, lx + 3.5, y - 1.5, LIGHT);
+        if (rx < 77) line(e, rx, y - 1.5, rx + 3.5, y + 2, LIGHT);
+      }
+      line(e, 48 + row * 5, 12 + row * 3.2, 51 + row * 5, 14 + row * 3.2, LIGHT);
+    }
+    line(e, 7, 48, 79, 48, BASE);
+    line(e, 14, 54, 72, 54, LIGHT);
+
+    // Two front windows have inset frames, muntins, glazing reflections and sills.
+    function windowAt(x, y) {
+      polygon(e, [x, y, x + 15, y, x + 15, y + 18, x, y + 18], true, false, BASE);
+      polygon(e, [x + 1.5, y + 1.5, x + 13.5, y + 1.5, x + 13.5, y + 16.5, x + 1.5, y + 16.5], true, false, LIGHT);
+      line(e, x + 7.5, y + 1, x + 7.5, y + 17, BASE);
+      line(e, x + 1, y + 9, x + 14, y + 9, BASE);
+      line(e, x - 2, y - 1.5, x + 17, y - 1.5, BASE);
+      line(e, x - 2, y + 19, x + 17, y + 19, BASE);
+      line(e, x + 3, y + 3, x + 6, y + 6, LIGHT);
+      line(e, x + 10, y + 11, x + 13, y + 14, LIGHT);
+      shade(e, x + 12, y + 13, 1.8, 3.8, 7);
+    }
+    windowAt(21, 61);
+    windowAt(47, 61);
+
+    // Narrow side window recedes with the right wall's perspective.
+    polygon(e, [74, 55, 83, 50, 83, 65, 74, 70], true, false, LIGHT);
+    line(e, 78.5, 52.5, 78.5, 67.5, LIGHT);
+    line(e, 73, 63, 84, 58, LIGHT);
+
+    // Recessed front door, inset panels, handle and stone threshold.
+    polygon(e, [34, 65, 45, 65, 45, 94, 34, 94], true, false, BASE);
+    curve(e, [34, 70, 34, 61, 39.5, 59, 45, 70], LIGHT);
+    line(e, 36, 70, 36, 92, LIGHT);
+    line(e, 43, 70, 43, 92, LIGHT);
+    line(e, 36.5, 79, 42.5, 79, SHADE);
+    line(e, 36.5, 86, 42.5, 86, SHADE);
+    circle(e, 42, 79, 1.15, false, BASE);
+    polygon(e, [31, 94, 48, 94, 50, 97, 29, 97], true, false, LIGHT);
+    line(e, 26, 98, 52, 98, BASE);
+
+    // Foundation stones, stepping path, shrubs and a few grass blades.
+    for (let i = 0; i < 7; i += 1) {
+      const x = 17 + i * 7;
+      line(e, x, 95, x + 4, 95, LIGHT);
+      if (i % 2 === 0) line(e, x + 2, 92, x + 2, 95, SHADE);
+    }
+    curve(e, [43, 98, 39, 99, 34, 100], LIGHT);
+    curve(e, [49, 98, 54, 99, 60, 100], LIGHT);
+    for (let i = 0; i < 5; i += 1) {
+      const x = 5 + i * 3;
+      curve(e, [x + 4, 96, x, 91, x + 2, 87 - (i % 2) * 2], LIGHT);
+      curve(e, [91 + i, 95, 95 + i, 91, 93 + i, 86], LIGHT);
+    }
+  }
+  add('house', ['home', 'cottage', 'homes'], 'buildings', 1.25, detailedHouse, {
+    layer: 'mid', anchor: 'ground', anchors: { top: [0.5, 0.12], inside: [0.5, 0.62] }
+  });
+
+  function detailedPine(e) {
+    // Slightly leaning trunk with root flare and a shaded side.
+    curve(e, [49, 99, 48, 77, 51, 54, 50, 29, 52, 8], BASE);
+    curve(e, [53, 99, 52, 77, 54, 55, 53, 31, 55, 8], LIGHT);
+    line(e, 49, 88, 41, 99, LIGHT);
+    line(e, 53, 88, 61, 99, LIGHT);
+
+    // Layered boughs are curved and slightly irregular, not solid triangles.
+    const tiers = [
+      { y: 22, reach: 14, drop: 12 },
+      { y: 31, reach: 22, drop: 14 },
+      { y: 42, reach: 30, drop: 15 },
+      { y: 54, reach: 37, drop: 15 },
+      { y: 67, reach: 43, drop: 14 },
+      { y: 80, reach: 48, drop: 12 }
+    ];
+    tiers.forEach(function (tier, index) {
+      const y = tier.y;
+      const reach = tier.reach;
+      const drop = tier.drop;
+      curve(e, [50, y, 46, y + 3, 50 - reach * 0.62, y + drop * 0.72, 50 - reach, y + drop], BASE);
+      curve(e, [50, y + 1, 55, y + 4, 50 + reach * 0.6, y + drop * 0.72, 50 + reach, y + drop], BASE);
+      curve(e, [50 - reach * 0.7, y + drop * 0.7, 50 - reach * 0.9, y + drop * 0.55, 50 - reach, y + drop], LIGHT);
+      curve(e, [50 + reach * 0.7, y + drop * 0.7, 50 + reach * 0.9, y + drop * 0.55, 50 + reach, y + drop], LIGHT);
+
+      // Small sprays of needles along each branch, with seeded variation.
+      for (let side = -1; side <= 1; side += 2) {
+        for (let i = 0; i < 11; i += 1) {
+          const t = (i + 0.5) / 11;
+          const bx = 50 + side * reach * t;
+          const by = y + drop * t;
+          const jitter = (e.random() - 0.5) * 2.2;
+          line(e, bx, by + jitter, bx + side * (2.5 + e.random() * 3), by - 3 - e.random() * 3, LIGHT);
+          if (i % 3 === 0) line(e, bx + side * 2, by + 1, bx + side * 5, by - 1, SHADE);
+        }
+      }
+      if (index % 2 === 0) {
+        curve(e, [50 - reach * 0.25, y + 5, 50 - reach * 0.4, y + 9, 50 - reach * 0.55, y + 10], LIGHT);
+        curve(e, [50 + reach * 0.25, y + 5, 50 + reach * 0.4, y + 9, 50 + reach * 0.55, y + 10], LIGHT);
+      }
+    });
+    shade(e, 56, 74, 20, 7, 28);
+  }
+  add('pine-tree', ['pine', 'pine trees', 'evergreen'], 'nature', 0.82, detailedPine, {
+    layer: 'mid', anchor: 'ground', plural: 3, anchors: { top: [0.5, 0.05] }
+  });
+
+  function detailedRiver(e) {
+    // Fill a soft S-shaped channel first; smooth bank curves define its edges.
+    const ctx = e.ctx;
+    ctx.save();
+    ctx.translate(-50, -100);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#d9d8d2';
+    ctx.globalAlpha = 0.92;
+    ctx.beginPath();
+    ctx.moveTo(38, -2);
+    ctx.bezierCurveTo(51, 14, 36, 21, 42, 35);
+    ctx.bezierCurveTo(49, 49, 42, 57, 54, 70);
+    ctx.bezierCurveTo(66, 83, 54, 93, 64, 102);
+    ctx.lineTo(84, 102);
+    ctx.bezierCurveTo(72, 88, 79, 79, 69, 67);
+    ctx.bezierCurveTo(57, 53, 75, 45, 61, 32);
+    ctx.bezierCurveTo(49, 20, 65, 10, 56, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    curve(e, [38, -2, 51, 14, 36, 21, 42, 35, 49, 49, 42, 57, 54, 70, 66, 83, 54, 93, 64, 101], BASE);
+    curve(e, [56, -2, 65, 10, 49, 20, 61, 32, 75, 45, 57, 53, 69, 67, 79, 79, 72, 88, 84, 101], BASE);
+    // Fine reflections follow the water's bends rather than crossing the banks.
+    const ripples = [
+      [48, 9, 54, 10], [43, 25, 50, 26], [55, 39, 62, 40],
+      [48, 55, 55, 56], [62, 70, 68, 71], [56, 86, 63, 87]
+    ];
+    ripples.forEach(function (r, i) {
+      curve(e, [r[0], r[1], r[0] + 2, r[1] - 1.2, r[2], r[3]], { alpha: 0.27, width: 0.7, passes: 1, wobble: 0.015 });
+      if (i % 2 === 0) line(e, r[0] + 1, r[1] + 3, r[2] - 1, r[3] + 3, SHADE);
+    });
+    // Rounded stones and reeds break up the banks and establish scale.
+    for (let i = 0; i < 7; i += 1) {
+      const y = 8 + i * 13;
+      const side = i % 2 ? -1 : 1;
+      const bend = Math.sin(i * 0.8) * 7;
+      const x = 48 + bend + side * 22;
+      ellipse(e, x, y, 2.4 + (i % 3), 1.2, false, LIGHT);
+      line(e, x + side * 4, y + 5, x + side * 7, y - 4, LIGHT);
+      line(e, x + side * 4, y + 5, x + side * 11, y - 1, LIGHT);
+      if (i % 2 === 0) line(e, x + side * 7, y + 4, x + side * 13, y - 5, SHADE);
+    }
+  }
+  add('river', ['rivers', 'stream', 'winding river'], 'nature', 1.05, detailedRiver, {
+    layer: 'far', anchor: 'water', anchors: { top: [0.5, 0.12] }
+  });
+
+  function detailedSun(e) {
+    for (let i = 0; i < 16; i += 1) {
+      const a = (Math.PI * 2 * i) / 16;
+      const inner = i % 2 ? 32 : 29;
+      const outer = i % 2 ? 43 : 47;
+      line(e, 50 + Math.cos(a) * inner, 50 + Math.sin(a) * inner,
+        50 + Math.cos(a) * outer, 50 + Math.sin(a) * outer,
+        i % 2 ? LIGHT : BASE);
+    }
+    circle(e, 50, 50, 25, false, BASE);
+    circle(e, 50, 50, 21.5, false, LIGHT);
+    arc(e, 47, 48, 16, -2.45, -0.45, LIGHT);
+    arc(e, 52, 53, 18, 0.45, 2.45, SHADE);
+    for (let i = 0; i < 13; i += 1) {
+      const a = 0.3 + i * 0.43;
+      const r = 9 + (i % 4) * 2;
+      line(e, 50 + Math.cos(a) * r, 50 + Math.sin(a) * r,
+        50 + Math.cos(a) * (r + 2.5), 50 + Math.sin(a) * (r + 2.5), LIGHT);
+    }
+  }
+  add('sun', ['sunshine'], 'space-sky', 1, detailedSun, { layer: 'sky', anchor: 'sky' });
+
+  function flyingBird(e) {
+    // A shallow gull-like wing profile reads clearly at scene-scale sizes.
+    curve(e, [28, 57, 37, 51, 49, 50, 60, 52, 69, 56, 64, 63, 51, 66, 39, 64, 28, 57], BASE);
+    ellipse(e, 72, 50, 6, 5.5, false, BASE);
+    polygon(e, [77, 49, 91, 51.5, 78, 54], true, false, BASE);
+    circle(e, 73, 48, 1.0, false, BASE);
+    // Wings stretch sideways with a slight rise toward the tips.
+    curve(e, [48, 54, 38, 44, 27, 39, 14, 42, 25, 47, 39, 55, 49, 60], BASE);
+    curve(e, [54, 54, 64, 44, 76, 39, 89, 42, 79, 47, 65, 55, 55, 60], BASE);
+    // Flight feathers fan from the shoulders and taper at their ends.
+    for (let i = 0; i < 5; i += 1) {
+      line(e, 39 - i * 3, 49 - i * 1.4, 20 + i * 2, 43 + i * 1.2, LIGHT);
+      line(e, 61 + i * 3, 49 - i * 1.4, 82 - i * 2, 43 + i * 1.2, LIGHT);
+    }
+    // Tail feathers and breast contour.
+    polygon(e, [31, 59, 16, 55, 24, 62, 16, 67, 34, 64], true, false, LIGHT);
+    curve(e, [46, 60, 53, 62, 61, 59], LIGHT);
+    line(e, 43, 63, 49, 65, SHADE);
+  }
+  add('bird', ['birds', 'small bird'], 'animals', 1.35, flyingBird, {
+    layer: 'sky', anchor: 'sky', plural: 3
+  });
+
 })(window.Sketchbook);
