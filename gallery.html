@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- gallery.html — visual catalog and drawing smoke-test for registered objects. -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f5ee">
+  <meta name="description" content="Browse the hand-drawn procedural object library included with Text-to-Sketch.">
+  <title>Text-to-Sketch — Object Gallery</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #302f2c;
+      background: #f8f5ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: #f8f5ee;
+      background-image: radial-gradient(rgba(92, 78, 58, 0.055) 0.55px, transparent 0.55px);
+      background-size: 5px 5px;
+    }
+    main { width: min(1180px, 100%); margin: 0 auto; padding: 24px 16px 48px; }
+    header { margin-bottom: 22px; }
+    h1 { margin: 0 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 600; }
+    .intro { max-width: 720px; margin: 0; color: #605b53; line-height: 1.55; }
+    .toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 220px); gap: 10px; margin: 20px 0 14px; }
+    input, select {
+      width: 100%; min-height: 46px; border: 1px solid #bdb5a8; border-radius: 10px;
+      padding: 10px 12px; background: rgba(255,255,255,.65); color: #302f2c; font: inherit;
+    }
+    input:focus, select:focus, a:focus-visible { outline: 3px solid #617f9f; outline-offset: 2px; }
+    .summary { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 0 0 18px; color: #665f55; font-size: .94rem; }
+    .summary strong { color: #302f2c; font-variant-numeric: tabular-nums; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+    .object-card {
+      min-width: 0; overflow: hidden; border: 1px solid #d4ccbd; border-radius: 13px;
+      background: rgba(255,255,255,.56); box-shadow: 0 2px 7px rgba(48, 41, 30, .045);
+    }
+    .object-card canvas { display: block; width: 100%; height: auto; aspect-ratio: 240 / 150; background: #f8f5ee; }
+    .card-copy { padding: 8px 10px 11px; }
+    .card-copy h2 { margin: 0 0 3px; font-size: .98rem; font-weight: 650; overflow-wrap: anywhere; }
+    .card-copy p { margin: 0; color: #726b61; font-size: .78rem; line-height: 1.4; overflow-wrap: anywhere; }
+    .failed { border-color: #a7463c; background: #fff4f0; }
+    .failed .card-copy p { color: #8a3028; }
+    .empty { padding: 26px 12px; color: #665f55; text-align: center; border: 1px dashed #bdb5a8; border-radius: 12px; }
+    footer { margin-top: 26px; color: #746d63; font-size: .85rem; line-height: 1.5; }
+    footer a { color: #435f7c; }
+    @media (max-width: 520px) {
+      main { padding: 18px 12px 32px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .card-copy { padding: 7px 8px 9px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .object-card { transition: transform 120ms ease, box-shadow 120ms ease; }
+      .object-card:hover { transform: translateY(-2px); box-shadow: 0 5px 14px rgba(48, 41, 30, .08); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Object Gallery</h1>
+      <p class="intro">A visual catalog of the procedural pencil drawings registered in Text-to-Sketch. Every card is rendered locally by the same sketch engine used by the app.</p>
+    </header>
+
+    <div class="toolbar">
+      <label>
+        <span class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Search object names and aliases</span>
+        <input id="search" type="search" placeholder="Search objects or aliases…" autocomplete="off">
+      </label>
+      <label>
+        <span class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Filter by category</span>
+        <select id="category">
+          <option value="all">All categories</option>
+          <option value="nature">Nature</option>
+          <option value="animals">Animals</option>
+          <option value="people">People</option>
+          <option value="buildings">Buildings</option>
+          <option value="vehicles">Vehicles</option>
+          <option value="food">Food</option>
+          <option value="household">Household</option>
+          <option value="tools-tech">Tools &amp; tech</option>
+          <option value="space-sky">Space &amp; sky</option>
+          <option value="symbols">Symbols</option>
+          <option value="fantasy">Fantasy</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="summary" aria-live="polite">
+      <span><strong id="object-count">0</strong> objects</span>
+      <span><strong id="category-count">0</strong> categories</span>
+      <span id="test-status">Preparing drawing checks…</span>
+    </div>
+
+    <section id="gallery" class="gallery" aria-label="Registered sketch objects"></section>
+    <section id="failures" aria-live="polite" hidden>
+      <h2>Drawing checks to review</h2>
+      <ul id="failure-list"></ul>
+    </section>
+
+    <footer>
+      <a href="./index.html">Back to Text-to-Sketch</a>
+      <span aria-hidden="true"> · </span>
+      Gallery tests detect JavaScript drawing warnings and canvases that remain unchanged after an object is drawn.
+    </footer>
+  </main>
+
+  <!-- Keep classic scripts in the same dependency order as index.html. -->
+  <script src="./sketchEngine.js"></script>
+  <script src="./strokeFont.js"></script>
+  <script src="./objects.js"></script>
+  <script src="./library/nature.js"></script>
+  <script src="./library/animals.js"></script>
+  <script src="./library/people.js"></script>
+  <script src="./library/buildings.js"></script>
+  <script src="./library/vehicles.js"></script>
+  <script src="./library/food.js"></script>
+  <script src="./library/household.js"></script>
+  <script src="./library/tools-tech.js"></script>
+  <script src="./library/space-sky.js"></script>
+  <script src="./library/symbols.js"></script>
+  <script src="./library/fantasy.js"></script>
+  <script src="./parser.js"></script>
+  <script src="./layout.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const S = window.Sketchbook;
+      const grid = document.getElementById('gallery');
+      const search = document.getElementById('search');
+      const category = document.getElementById('category');
+      const objectCount = document.getElementById('object-count');
+      const categoryCount = document.getElementById('category-count');
+      const testStatus = document.getElementById('test-status');
+      const failuresPanel = document.getElementById('failures');
+      const failureList = document.getElementById('failure-list');
+      const categoryNames = {
+        nature: 'Nature', animals: 'Animals', people: 'People', buildings: 'Buildings',
+        vehicles: 'Vehicles', food: 'Food', household: 'Household', 'tools-tech': 'Tools & tech',
+        'space-sky': 'Space & sky', symbols: 'Symbols', fantasy: 'Fantasy'
+      };
+      const defs = Array.from(S.objects.values()).sort(function (a, b) {
+        return a.category.localeCompare(b.category) || a.id.localeCompare(b.id);
+      });
+      const failures = [];
+
+      function drawCard(def) {
+        const card = document.createElement('article');
+        card.className = 'object-card';
+        const canvas = document.createElement('canvas');
+        canvas.width = 240;
+        canvas.height = 150;
+        canvas.setAttribute('role', 'img');
+        canvas.setAttribute('aria-label', 'Pencil drawing of ' + def.id.replace(/-/g, ' '));
+        const copy = document.createElement('div');
+        copy.className = 'card-copy';
+        const title = document.createElement('h2');
+        title.textContent = def.id.replace(/-/g, ' ');
+        const detail = document.createElement('p');
+        const aliases = (def.aliases || []).filter(function (alias) { return alias !== def.id.replace(/-/g, ' '); });
+        detail.textContent = (categoryNames[def.category] || def.category) + (aliases.length ? ' · ' + aliases.join(', ') : '');
+        copy.appendChild(title);
+        copy.appendChild(detail);
+        card.appendChild(canvas);
+        card.appendChild(copy);
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const engine = new S.SketchEngine(ctx, 240, 150, S.hash(def.id));
+        engine.clear();
+        const before = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        const previousWarn = console.warn;
+        let warning = '';
+        console.warn = function () {
+          warning = Array.from(arguments).map(String).join(' ');
+          previousWarn.apply(console, arguments);
+        };
+        try {
+          const fit = Math.min(0.82, 190 / Math.max(35, def.aspect * 100), 104 / 100);
+          S.drawObject(engine, def, 120, 124, fit, S.hash(def.id + '|gallery'), {});
+        } catch (error) {
+          warning = error && error.message ? error.message : String(error);
+        } finally {
+          console.warn = previousWarn;
+        }
+
+        const after = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let changed = 0;
+        for (let i = 0; i < after.length; i += 4) {
+          if (Math.abs(after[i] - before[i]) + Math.abs(after[i + 1] - before[i + 1]) + Math.abs(after[i + 2] - before[i + 2]) > 8) changed += 1;
+        }
+        if (warning || changed < 4) {
+          card.classList.add('failed');
+          const issue = warning ? 'Drawing warning: ' + warning : 'No visible pixels changed.';
+          detail.textContent += ' · CHECK: ' + issue;
+          failures.push({ id: def.id, issue: issue });
+        }
+        return card;
+      }
+
+      defs.forEach(function (def) { grid.appendChild(drawCard(def)); });
+      objectCount.textContent = String(defs.length);
+      categoryCount.textContent = String(new Set(defs.map(function (def) { return def.category; })).size);
+      if (failures.length) {
+        testStatus.textContent = failures.length + ' item(s) need review';
+        failuresPanel.hidden = false;
+        failures.forEach(function (failure) {
+          const li = document.createElement('li');
+          li.textContent = failure.id + ': ' + failure.issue;
+          failureList.appendChild(li);
+        });
+      } else {
+        testStatus.textContent = 'All drawing checks passed';
+      }
+
+      function applyFilters() {
+        const term = search.value.trim().toLowerCase();
+        const selectedCategory = category.value;
+        let visible = 0;
+        Array.from(grid.children).forEach(function (card, index) {
+          const def = defs[index];
+          const matchesCategory = selectedCategory === 'all' || def.category === selectedCategory;
+          const searchText = [def.id, ...(def.aliases || []), def.category].join(' ').toLowerCase();
+          const matchesSearch = !term || searchText.includes(term);
+          card.hidden = !(matchesCategory && matchesSearch);
+          if (!card.hidden) visible += 1;
+        });
+        objectCount.textContent = String(visible);
+        let empty = document.getElementById('empty-state');
+        if (!visible) {
+          if (!empty) {
+            empty = document.createElement('p');
+            empty.id = 'empty-state';
+            empty.className = 'empty';
+            empty.textContent = 'No objects match that search.';
+            grid.insertAdjacentElement('afterend', empty);
+          }
+        } else if (empty) {
+          empty.remove();
+        }
+      }
+      search.addEventListener('input', applyFilters);
+      category.addEventListener('change', applyFilters);
+    })();
+  </script>
+</body>
+</html>
