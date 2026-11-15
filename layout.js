@@ -289,6 +289,10 @@
       const trees = group('pine-tree');
       const suns = group('sun');
       const birds = group('bird');
+      const shepherds = group('german-shepherd');
+      const deciduousTrees = group('tree');
+      const pineTrees = group('pine-tree');
+      const grassItems = group('grass');
 
       if (houses.length && rivers.length) {
         const houseScale = Math.min(h * 0.26 / 100, w * 0.27 / 100);
@@ -338,6 +342,32 @@
         entry.y = h * (0.19 + (index % 2) * 0.065);
         entry.scale = Math.min(h * 0.075 / 100, w * 0.075 / 100);
       });
+
+      // Dedicated focal composition for the first anatomy benchmark.
+      // The foreground subject owns the visual center; distant trees are
+      // separated left/right and scaled against the horizon, never against
+      // the sun or another object in the prompt.
+      if (shepherds.length) {
+        shepherds.forEach(function (entry, index) {
+          entry.x = w * (0.50 + (index - (shepherds.length - 1) / 2) * 0.25);
+          entry.y = h * 0.93;
+          entry.scale = Math.min(h * 0.36 / 100, w * 0.31 / (Math.max(0.8, entry.def.aspect || 1) * 100));
+        });
+        const backgroundTrees = deciduousTrees.concat(pineTrees);
+        backgroundTrees.forEach(function (entry, index) {
+          entry.def = Object.assign({}, entry.def, { layer: 'far' });
+          entry.x = w * (backgroundTrees.length === 1 ? 0.78 : 0.18 + 0.64 * index / (backgroundTrees.length - 1));
+          entry.y = h * 0.91;
+          entry.scale = Math.min(h * 0.35 / 100, w * 0.19 / (Math.max(0.8, entry.def.aspect || 1) * 100));
+        });
+        const sunItem = sourceItems.find(function (item) { return item.id === 'sun'; });
+        suns.forEach(function (entry) {
+          entry.x = w * (sunItem && sunItem.region === 'left' ? 0.16 : 0.82);
+          entry.y = h * 0.23;
+          entry.scale = Math.min(h * 0.13 / 100, w * 0.13 / 100);
+        });
+        grassItems.forEach(function (entry) { entry.hidden = true; });
+      }
     }
 
     // Add automatic scenery without changing the prompt's recognized-object list.
@@ -358,8 +388,11 @@
         for (let i = 0; i < 8; i += 1) addAuto('star', w * (0.08 + random() * 0.82), h * (0.09 + random() * 0.31), h * 0.045 / 100, i + 2, 'sky');
       } else {
         const lowSun = time === 'sunset' || time === 'sunrise';
-        addAuto('sun', w * 0.82, lowSun ? h * 0.52 : h * 0.27, h * 0.14 / 100, 1, 'sky');
-        addAuto('cloud', w * 0.24, h * (lowSun ? 0.32 : 0.25), h * 0.11 / 100, 2, 'sky');
+        const leftSun = sourceItems.some(function (item) { return item.id === 'sun' && item.region === 'left'; });
+        addAuto('sun', leftSun ? w * 0.16 : w * 0.82, lowSun ? h * 0.52 : h * 0.27, h * 0.14 / 100, 1, 'sky');
+        if (!placed.some(function (entry) { return entry.id === 'german-shepherd'; })) {
+          addAuto('cloud', leftSun ? w * 0.77 : w * 0.24, h * (lowSun ? 0.32 : 0.25), h * 0.11 / 100, 2, 'sky');
+        }
       }
       if (setting === 'forest') {
         addAuto('pine tree', w * 0.1, h * 0.89, h * 0.34 / 100, 3, 'far');
@@ -385,6 +418,47 @@
     }
 
     return placed;
+  }
+
+  function drawMeadow(engine, focusItems) {
+    const w = engine.width;
+    const h = engine.height;
+    const random = S.rng((engine.seed ^ S.hash('shepherd-meadow')) >>> 0);
+    const horizon = h * 0.66;
+    engine.sketchCurve([[0, h * 0.82], [w * 0.18, h * 0.79], [w * 0.38, h * 0.83], [w * 0.61, h * 0.78], [w * 0.82, h * 0.81], [w, h * 0.77]], { alpha: 0.20, width: 0.85, passes: 1, wobble: 0.02 });
+    engine.sketchCurve([[0, h * 0.91], [w * 0.22, h * 0.885], [w * 0.45, h * 0.91], [w * 0.72, h * 0.88], [w, h * 0.90]], { alpha: 0.18, width: 0.7, passes: 1, wobble: 0.02 });
+
+    // Distant grass marks are short and sparse; foreground blades become
+    // longer and darker so the field gains depth without a noisy carpet.
+    for (let i = 0; i < 84; i += 1) {
+      const x = random() * w;
+      const depth = random();
+      const y = horizon + h * (0.18 + depth * 0.17);
+      const bladeHeight = (2.2 + depth * 7.5) * (h / 500);
+      const lean = (random() - 0.5) * bladeHeight * 1.2;
+      const alpha = 0.14 + depth * 0.20;
+      engine.sketchLine(x, y, x + lean, y - bladeHeight, { alpha, width: 0.48 + depth * 0.24, passes: 1, wobble: 0.02, overshoot: false });
+      if (i % 4 === 0) engine.sketchLine(x + 1.5, y, x + lean * 0.45 + 2, y - bladeHeight * 0.65, { alpha: alpha * 0.8, width: 0.45, passes: 1, overshoot: false });
+    }
+
+    // A few denser tufts sit at the bottom edge and around the subject's feet.
+    for (let i = 0; i < 17; i += 1) {
+      const x = w * (0.025 + i * 0.059);
+      const y = h * (0.965 - random() * 0.025);
+      const size = h * (0.018 + random() * 0.027);
+      for (let blade = 0; blade < 5; blade += 1) {
+        const offset = (blade - 2) * size * 0.19;
+        engine.sketchCurve([[x + offset, y], [x + offset * 1.3, y - size * 0.45], [x + offset * 2.1 + (random() - 0.5) * size, y - size * (0.62 + random() * 0.38)]], { alpha: 0.23 + random() * 0.13, width: 0.62, passes: 1, wobble: 0.02, overshoot: false });
+      }
+    }
+
+    // Fine ground texture is deterministic and lightly weighted to the foreground.
+    for (let i = 0; i < 34; i += 1) {
+      const x = random() * w;
+      const y = h * (0.91 + random() * 0.07);
+      const length = 2 + random() * 7;
+      engine.sketchLine(x, y, x + length, y - random() * 1.8, { alpha: 0.12 + random() * 0.12, width: 0.48, passes: 1, overshoot: false });
+    }
   }
 
   function drawBackdrop(engine, scene) {
@@ -510,7 +584,9 @@
 
   function render(engine, placed, scene) {
     drawBackdrop(engine, scene);
-    const ordered = placed.slice().sort(function (a, b) {
+    const hasShepherd = placed.some(function (item) { return item.id === 'german-shepherd'; });
+    if (hasShepherd) drawMeadow(engine, placed);
+    const ordered = placed.filter(function (item) { return !item.hidden; }).sort(function (a, b) {
       const layerA = a.def ? (LAYER_ORDER[a.def.layer] == null ? 3 : LAYER_ORDER[a.def.layer]) : 3;
       const layerB = b.def ? (LAYER_ORDER[b.def.layer] == null ? 3 : LAYER_ORDER[b.def.layer]) : 3;
       if (layerA !== layerB) return layerA - layerB;

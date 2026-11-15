@@ -151,6 +151,8 @@
 
   function relationBetween(segment) {
     const text = normalize(segment).replace(/\bon fire\b/g, 'burning');
+    // Region phrases such as "in the background" describe placement, not containment.
+    if (/\bin (?:the )?(?:background|foreground|sky)\b/.test(text)) return null;
     for (const relation of RELATIONS) {
       if (relation.words.some(function (word) { return new RegExp('(^| )' + word.replace(/ /g, '\\s+') + '( |$)').test(text); })) return relation.type;
     }

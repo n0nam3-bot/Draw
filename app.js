@@ -19,6 +19,7 @@
 
   const EXAMPLES = [
     'A cozy house next to a winding river with two pine trees under a bright sun and birds',
+    'A German Shepherd sitting with two pine trees in the background and a bright sun to the left',
     'A robot holding a red balloon at night',
     'Three cats sleeping on a sofa',
     'A pirate ship sailing under a full moon',
