@@ -81,9 +81,16 @@ The application uses classic script tags. Keep this dependency order in `index.h
 12. `library/space-sky.js`
 13. `library/symbols.js`
 14. `library/fantasy.js`
-15. `parser.js`
-16. `layout.js`
-17. `app.js` (application page only; omit it from the gallery)
+15. `library/detail-art.js`
+16. `illustration-tools.js`
+17. `library/advanced-illustrations.js`
+18. `visual-engine.js`
+19. `library/animal-illustrator.js`
+20. `parser.js`
+21. `layout.js`
+22. `app.js` (application page only; omit it from the gallery)
+
+The reusable construction toolkit and its extension contract are documented in `VISUAL_ENGINE.md`.
 
 Files are ordinary browser scripts that share the single `window.Sketchbook` namespace. Do not convert them to ES modules: classic scripts allow the app to run from a local `file://` URL in browsers that block local module imports.
 
@@ -176,7 +183,7 @@ The library is grouped into `nature`, `animals`, `people`, `buildings`, `vehicle
 
 ## Honest limitations
 
-This is not an AI image generator and does not understand every possible typed instruction. It can draw only from its built-in object library, the parser's known vocabulary and the fallback doodle system. Unknown words become labelled abstract doodles; they are not transformed into accurate drawings of arbitrary real-world objects. Complex multi-clause grammar, fine spatial relationships, text placement, object proportions and dense scenes can be interpreted imperfectly. The app is a procedural sketching toy, not a general-purpose illustration model.
+This is not an AI image generator and does not understand every possible typed instruction. It can draw only from its built-in object library, authored subject models, the parser's known vocabulary and the fallback doodle system. Unknown words become labelled abstract doodles; they are not transformed into accurate drawings of arbitrary real-world objects. The Visual Engine adds reusable curve construction, lighting planes, pressure-tapered marks, material textures and basic skeletal posing for subject-specific illustrations. It does not learn visual concepts or infer arbitrary anatomy like a trained image model. Complex multi-clause grammar, fine spatial relationships, text placement, object proportions and dense scenes can still be interpreted imperfectly. The current German Shepherd model is an early stylized prototype, not a finished realistic illustration or a general-purpose image-generation model.
 
 The drawing code uses Canvas 2D and browser APIs available in modern browsers. PNG sharing depends on browser support and may fall back to a download or image tab. Offline use begins after the local files are available; the project itself makes no runtime API calls or requires external assets.
 
