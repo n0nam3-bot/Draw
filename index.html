@@ -1,111 +1,83 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f8f5ee">
-  <meta name="description" content="Turn a typed prompt into a hand-drawn pencil sketch. Free, private, offline-friendly and powered by procedural drawing.">
-  <title>Text-to-Sketch — a little pencil magic</title>
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-  <main class="app-shell">
-    <header class="site-header">
-      <div class="brand-mark" aria-hidden="true">✎</div>
-      <div>
-        <p class="eyebrow">A tiny drawing studio</p>
-        <h1>Text-to-Sketch</h1>
-      </div>
-      <nav class="site-nav" aria-label="Main navigation">
-        <a class="header-link" href="./gallery.html"><span aria-hidden="true">▦</span> Gallery</a>
-      </nav>
-      <span class="offline-label">Free · Private · Offline-friendly</span>
-    </header>
-
-    <section class="intro" aria-labelledby="intro-title">
-      <h2 id="intro-title">Imagine it. Type it. Sketch it.</h2>
-      <p>Describe almost anything. Your prompt becomes a wobbly, pencil-style drawing right here in your browser.</p>
-    </section>
-
-    <section class="prompt-panel" aria-label="Sketch prompt">
-      <label for="prompt">What should we draw?</label>
-      <textarea id="prompt" rows="2" maxlength="500" placeholder="A fox reading a book under a tree…" enterkeyhint="go"></textarea>
-      <div class="main-actions">
-        <button id="sketch-button" class="button button-primary" type="button">✎ Sketch It</button>
-        <button id="surprise-button" class="button button-secondary" type="button">Surprise me</button>
-      </div>
-      <div class="examples-heading">Try an idea</div>
-      <div id="examples" class="example-chips" aria-label="Example prompts"></div>
-    </section>
-
-    <section id="canvas-wrap" class="canvas-panel" aria-label="Your sketch">
-      <div class="canvas-toolbar">
-        <div>
-          <h2>Your sketch</h2>
-          <p id="status" class="status" aria-live="polite" aria-atomic="true">Your sketch will appear here.</p>
-        </div>
-        <details class="options-menu">
-          <summary>Options</summary>
-          <div class="options-content">
-            <label class="toggle-row" for="colors">
-              <span><strong>Colored pencils</strong><small>Use gentle category colors</small></span>
-              <input id="colors" type="checkbox">
-            </label>
-            <label for="background">Background
-              <select id="background">
-                <option value="auto" selected>Auto</option>
-                <option value="scene">Scene</option>
-                <option value="none">None</option>
-              </select>
-            </label>
-            <label for="shape">Canvas shape
-              <select id="shape">
-                <option value="auto" selected>Auto (square on phones)</option>
-                <option value="wide">Wide · 800 × 500</option>
-                <option value="square">Square · 600 × 600</option>
-                <option value="tall">Tall · 500 × 700</option>
-              </select>
-            </label>
-          </div>
-        </details>
-      </div>
-      <div class="paper-frame">
-        <canvas id="sketch-canvas" width="800" height="500" role="img" aria-label="Your generated pencil sketch"></canvas>
-      </div>
-      <div class="canvas-actions">
-        <button id="redraw-button" class="button button-secondary" type="button">↻ Redraw</button>
-        <button id="clear-button" class="button button-secondary" type="button">Clear</button>
-        <button id="download-button" class="button button-secondary" type="button">↓ Download PNG</button>
-        <button id="copy-button" class="button button-secondary" type="button">Copy link</button>
-      </div>
-    </section>
-
-    <footer class="site-footer">
-      <p>Made with lines, little imperfections, and no AI. Unknown words become their own labelled doodles.</p>
-    </footer>
-  </main>
-
-  <script src="./sketchEngine.js"></script>
-  <script src="./strokeFont.js"></script>
-  <script src="./objects.js"></script>
-  <script src="./library/nature.js"></script>
-  <script src="./library/animals.js"></script>
-  <script src="./library/people.js"></script>
-  <script src="./library/buildings.js"></script>
-  <script src="./library/vehicles.js"></script>
-  <script src="./library/food.js"></script>
-  <script src="./library/household.js"></script>
-  <script src="./library/tools-tech.js"></script>
-  <script src="./library/space-sky.js"></script>
-  <script src="./library/symbols.js"></script>
-  <script src="./library/fantasy.js"></script>
-  <script src="./library/detail-art.js"></script>
-  <script src="./illustration-tools.js"></script>
-  <script src="./library/advanced-illustrations.js"></script>
-  <script src="./visual-engine.js"></script>
-  <script src="./library/animal-illustrator.js"></script>
-  <script src="./parser.js"></script>
-  <script src="./layout.js"></script>
-  <script src="./app.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Sketchbook: free text-to-image</title>
+<style>
+:root{--bg:#ece6d8;--ink:#2a2926;--mut:#6a665c;--line:#cdc5b2;--paper:#f8f5ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1b18;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831}}
+:root[data-theme="dark"]{--bg:#1c1b18;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font:600 1.6rem/1.2 Georgia,"Times New Roman",serif;margin:.4em 0 .2em}
+.sub,.hint{color:var(--mut);margin:.2em 0 .8em}.hint{font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+input,select{min-height:44px;padding:0 12px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink)}
+input{flex:1 1 260px}
+select option{color:#000}
+button,.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;text-decoration:none}
+button.g,.btn.g{background:transparent;color:var(--ink)}
+button:disabled{opacity:.5;cursor:wait}
+.chips button{font-weight:400;font-size:.85rem;min-height:36px;border-radius:99px;border-color:var(--line)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sheet{min-height:260px;display:flex;align-items:center;justify-content:center;background:var(--paper);color:#6a665c;border:1px solid var(--line);border-radius:6px;margin:12px 0;overflow:hidden}
+.sheet img{display:block;max-width:100%;height:auto}
+#st{min-height:1.5em;margin:.4em 0}
+label{display:flex;align-items:center;gap:8px;color:var(--mut)}
+</style></head><body><main>
+<h1>✏️ Sketchbook</h1>
+<p class="sub">Type anything and community GPUs draw it for free. No account, no key, no install.</p>
+<div class="row"><input id="q" aria-label="What should I draw?" placeholder="A lighthouse keeper mending a net…" enterkeyhint="go" autocomplete="off"><button id="go">Draw it</button></div>
+<div class="row"><label>Style <select id="sty"><option value="pencil">Pencil sketch</option><option value="ink">Ink drawing</option><option value="water">Watercolor</option><option value="none">No style</option></select></label>
+<label>Shape <select id="shp"><option value="sq">Square</option><option value="wide">Wide</option><option value="tall">Tall</option></select></label></div>
+<div class="row chips" id="ch"></div>
+<div class="sheet"><img id="img" alt="" hidden><p id="ph">Your drawing will appear here.</p></div>
+<p id="st" aria-live="polite"></p>
+<div class="row"><button id="cx" class="g" hidden>Cancel</button><a id="op" class="btn g" target="_blank" rel="noopener" hidden>Open full image</a><button id="sv" class="g" hidden>Save</button></div>
+<p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes. Your prompt is visible to the volunteers who run it, so don’t type anything private.</p>
+</main>
+<script>
+(()=>{
+const API='https://aihorde.net/api/v2',KEY='0000000000',$=id=>document.getElementById(id);
+const q=$('q'),st=$('st'),img=$('img'),go=$('go'),cx=$('cx'),op=$('op'),sv=$('sv'),ph=$('ph');
+const NEG='### color, photo, text, watermark, signature, blurry, deformed, ugly';
+const STY={pencil:['pencil sketch of ',', graphite on paper, hand-drawn, cross-hatching, detailed shading, white paper background'],ink:['ink drawing of ',', pen and ink, bold linework, hatching, white background'],water:['watercolor painting of ',', soft washes, paper texture, delicate detail'],none:['','']};
+const SHP={sq:[512,512],wide:[576,448],tall:[448,576]};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let tid=0,rid=null;
+async function api(path,opt){const r=await fetch(API+path,opt);let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&(j.message||JSON.stringify(j.errors||j)))||('HTTP '+r.status));return j}
+function busy(b){go.disabled=b;cx.hidden=!b;if(b){op.hidden=sv.hidden=true}}
+async function draw(){
+const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
+const s=STY[$('sty').value],[w,h]=SHP[$('shp').value],id=++tid;
+busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';st.textContent='Sending your prompt…';
+try{
+const hd={'Content-Type':'application/json',apikey:KEY};
+const sub=await api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+t+s[1]+' '+NEG,params:{sampler_name:'k_euler_a',cfg_scale:7,width:w,height:h,steps:25,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
+rid=sub.id;const t0=Date.now();
+while(id===tid){
+await sleep(2500);
+const c=await api('/generate/check/'+rid,{headers:{apikey:KEY}});
+if(c.faulted)throw new Error('the network could not complete this request. Try again.');
+if(c.done||c.finished)break;
+st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(c.wait_time?'About '+c.wait_time+' s.':'');
+if(Date.now()-t0>420000)throw new Error('timed out after 7 minutes because the queue is busy. Try again later.');
+}
+if(id!==tid)return;
+const res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});
+const g=res.generations&&res.generations[0];
+if(!g||!g.img)throw new Error('no image came back (it may have been filtered). Try rewording.');
+img.src=g.img.indexOf('http')==0?g.img:'data:image/webp;base64,'+g.img;
+img.alt=t;img.hidden=false;ph.hidden=true;op.href=img.src;op.hidden=sv.hidden=false;
+st.textContent='Done'+(g.worker_name?' (drawn by a volunteer GPU).':'.');
+}catch(e){if(id===tid){ph.textContent='Nothing drawn yet.';st.textContent='Couldn’t draw that: '+e.message}}
+finally{if(id===tid)busy(false)}}
+cx.onclick=()=>{tid++;if(rid)fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});busy(false);ph.textContent='Cancelled.';st.textContent=''};
+sv.onclick=async()=>{try{const b=await (await fetch(img.src)).blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sketch.webp';a.click()}catch(e){window.open(img.src,'_blank')}};
+go.onclick=draw;
+q.addEventListener('keydown',e=>{if(e.key=='Enter'){q.blur();draw()}});
+['A lighthouse keeper mending a net','A dragon guarding a castle on a hill at sunset','A robot holding a red balloon','Three cats sleeping on a sofa','A cozy house next to a winding river with two pine trees','A pirate ship sailing under a full moon'].forEach(t=>{const b=document.createElement('button');b.className='g';b.textContent=t;b.onclick=()=>{q.value=t;draw()};$('ch').appendChild(b)});
+})();
+</script></body></html>
