@@ -33,7 +33,7 @@ select{max-width:100%}
 </style></head><body><main>
 <h1>✏️ Sketchbook</h1>
 <p class="sub">Type anything and community GPUs draw it for free. No account, no key, no install.</p>
-<div class="row"><input id="q" aria-label="What should I draw?" placeholder="A lighthouse keeper mending a net…" enterkeyhint="go" autocomplete="off"><button id="go">Draw it</button></div>
+<div class="row"><input id="q" aria-label="What should I draw?" placeholder="A lighthouse keeper mending a net…" enterkeyhint="go" name="drawing-prompt" autocomplete="off" data-lpignore="true" data-1p-ignore><button id="go">Draw it</button></div>
 <div class="row"><label>Style <select id="sty"><option value="pencil">Pencil sketch</option><option value="ink">Ink drawing</option><option value="water">Watercolor</option><option value="none">No style</option></select></label>
 <label>Shape <select id="shp"><option value="sq">Square</option><option value="wide">Wide</option><option value="tall">Tall</option></select></label>
 <label>Model <select id="mdl"><option value="">Auto</option></select></label>
@@ -42,7 +42,7 @@ select{max-width:100%}
 <div class="sheet" id="sheet"><img id="img" alt="" hidden><p id="ph">Your drawing will appear here.</p></div>
 <p id="st" aria-live="polite"></p>
 <div class="row"><button id="cx" class="g" hidden>Cancel</button><a id="op" class="btn g" target="_blank" rel="noopener" hidden>Open full image</a><button id="sv" class="g" hidden>Save</button></div>
-<details><summary>Faster queue (optional)</summary><p class="hint">A free AI Horde account gets higher priority than anonymous use. <a href="https://aihorde.net/register" target="_blank" rel="noopener">Register</a>, then paste your key here. It stays on this device.</p><input id="key" type="password" aria-label="AI Horde API key" placeholder="Your API key" autocomplete="off"></details>
+<details><summary>Faster queue (optional)</summary><p class="hint">A free AI Horde account gets higher priority than anonymous use. <a href="https://aihorde.net/register" target="_blank" rel="noopener">Register</a>, then paste your key here. It stays on this device.</p><input id="key" type="text" name="horde-key" aria-label="AI Horde API key" placeholder="Your API key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore readonly onfocus="this.removeAttribute('readonly')"></details>
 <p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes. Your prompt is visible to the volunteers who run it, so don’t type anything private.</p>
 </main>
 <script>
@@ -59,24 +59,29 @@ function busy(b){go.disabled=b;cx.hidden=!b;if(b){op.hidden=sv.hidden=true}}
 async function draw(){
 const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
 const s=STY[$('sty').value],m=mdl.value,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),id=++tid,dim=$('shp').value,SZ={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
-let [w,h]=(xl?BIG:SZ)[dim];KEY=keyIn.value.trim()||'0000000000';
+let [w,h]=(xl?BIG:SZ)[dim];const kv=keyIn.value.trim();KEY=/^[\w-]{16,40}$/.test(kv)?kv:'0000000000';
 busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';st.textContent='Sending your prompt…';
 try{
 const hd={'Content-Type':'application/json',apikey:KEY};
 const send=(w,h)=>api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+t+s[1]+' ### '+NEGB+s[2],models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
 let sub;try{sub=await send(w,h)}catch(e){if(xl&&/kudos/i.test(e.message)){[w,h]=SZ[dim];st.textContent='That size needs kudos, retrying smaller…';sub=await send(w,h)}else throw e}
 sheet.style.setProperty('--ar',(w/(h*.92)).toFixed(4));
-rid=sub.id;const t0=Date.now();
+rid=sub.id;const t0=Date.now();let fails=0;
 while(id===tid){
-await sleep(2500);
-const c=await api('/generate/check/'+rid,{headers:{apikey:KEY}});
+const el=Date.now()-t0;
+await sleep(el<60000?3000:el<300000?5000:8000);
+if(id!==tid)return;
+let c;
+try{c=await api('/generate/check/'+rid,{headers:{apikey:KEY}});fails=0}
+catch(e){if(/not found|expired/i.test(e.message)||++fails>10)throw e;st.textContent='Connection hiccup, still trying…';continue}
 if(c.faulted)throw new Error('the network could not complete this request. Try again.');
+if(c.is_possible===false)throw new Error('no GPU online can run that model or size right now. Pick Auto or another model.');
 if(c.done||c.finished)break;
-st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(c.wait_time?'About '+c.wait_time+' s.':'');
-if(Date.now()-t0>420000)throw new Error('timed out after 7 minutes because the queue is busy. Try again later.');
+const sec=Math.round((Date.now()-t0)/1000);
+st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(c.wait_time?'About '+c.wait_time+' s. ':'')+'('+sec+' s so far)'+(sec>180&&!c.processing?' Busy right now: keep waiting, or Cancel and try Auto or another model.':'');
 }
 if(id!==tid)return;
-const res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});
+let res;for(let k=0;;k++){try{res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(k>=3)throw e;await sleep(4000*(k+1))}}
 const g=res.generations&&res.generations[0];
 if(!g||!g.img)throw new Error('no image came back (it may have been filtered). Try rewording.');
 img.src=g.img.indexOf('http')==0?g.img:'data:image/webp;base64,'+g.img;
@@ -87,8 +92,8 @@ finally{if(id===tid)busy(false)}}
 cx.onclick=()=>{tid++;if(rid)fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});busy(false);ph.textContent='Cancelled.';st.textContent=''};
 sv.onclick=async()=>{try{let o=await (await fetch(img.src)).blob();if(crp.checked){const bm=await createImageBitmap(o),c=document.createElement('canvas');c.width=bm.width;c.height=Math.round(bm.height*.92);c.getContext('2d').drawImage(bm,0,0);o=await new Promise(r=>c.toBlob(r,'image/png'))}const a=document.createElement('a');a.href=URL.createObjectURL(o);a.download=crp.checked?'sketch.png':'sketch.webp';a.click()}catch(e){window.open(img.src,'_blank')}};
 go.onclick=draw;crp.onchange=()=>sheet.classList.toggle('crop',crp.checked);
-try{keyIn.value=localStorage.getItem('horde_key')||''}catch(e){}
-keyIn.onchange=()=>{try{localStorage.setItem('horde_key',keyIn.value.trim())}catch(e){}};
+try{localStorage.removeItem('horde_key');keyIn.value=localStorage.getItem('horde_key_v2')||''}catch(e){}
+keyIn.onchange=()=>{try{localStorage.setItem('horde_key_v2',keyIn.value.trim())}catch(e){}};
 fetch(API+'/status/models?type=image').then(r=>r.json()).then(L=>{L.sort((a,b)=>b.count-a.count).slice(0,14).forEach(x=>{const o=document.createElement('option');o.value=x.name;o.textContent=x.name+' ('+x.count+' GPUs)';mdl.appendChild(o)})}).catch(()=>{});
 q.addEventListener('keydown',e=>{if(e.key=='Enter'){q.blur();draw()}});
 ['A lighthouse keeper mending a net','A dragon guarding a castle on a hill at sunset','A robot holding a red balloon','Three cats sleeping on a sofa','A cozy house next to a winding river with two pine trees','A pirate ship sailing under a full moon'].forEach(t=>{const b=document.createElement('button');b.className='g';b.textContent=t;b.onclick=()=>{q.value=t;draw()};$('ch').appendChild(b)});
