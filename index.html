@@ -41,14 +41,14 @@ select{max-width:100%}
 <div class="row chips" id="ch"></div>
 <div class="sheet" id="sheet"><img id="img" alt="" hidden><p id="ph">Your drawing will appear here.</p></div>
 <p id="st" aria-live="polite"></p>
-<div class="row"><button id="cx" class="g" hidden>Cancel</button><a id="op" class="btn g" target="_blank" rel="noopener" hidden>Open full image</a><button id="sv" class="g" hidden>Save</button></div>
+<div class="row"><button id="cx" class="g" hidden>Cancel</button><button id="clr" class="g" hidden>Clear</button><a id="op" class="btn g" target="_blank" rel="noopener" hidden>Open full image</a><button id="sv" class="g" hidden>Save</button></div>
 <details><summary>Faster queue (optional)</summary><p class="hint">A free AI Horde account gets higher priority than anonymous use. <a href="https://aihorde.net/register" target="_blank" rel="noopener">Register</a>, then paste your key here. It stays on this device.</p><input id="key" type="text" name="horde-key" aria-label="AI Horde API key" placeholder="Your API key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore readonly onfocus="this.removeAttribute('readonly')"></details>
-<p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes. Your prompt is visible to the volunteers who run it, so don’t type anything private.</p>
+<p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes. Your prompt is visible to the volunteers who run it, so don’t type anything private. Your last drawing is saved in this browser, and a pending request resumes when you reopen the page.</p>
 </main>
 <script>
 (()=>{
 const API='https://aihorde.net/api/v2',$=id=>document.getElementById(id);let KEY='0000000000';
-const q=$('q'),st=$('st'),img=$('img'),go=$('go'),cx=$('cx'),op=$('op'),sv=$('sv'),ph=$('ph'),mdl=$('mdl'),crp=$('crp'),keyIn=$('key'),sheet=$('sheet');
+const q=$('q'),st=$('st'),img=$('img'),go=$('go'),cx=$('cx'),op=$('op'),sv=$('sv'),ph=$('ph'),mdl=$('mdl'),crp=$('crp'),keyIn=$('key'),sheet=$('sheet'),clr=$('clr');
 const NEGB='(signature:1.5), (watermark:1.5), (text:1.4), letters, writing, caption, logo, border, frame, blurry, deformed, bad anatomy, extra limbs, duplicate, low quality';
 const STY={pencil:['detailed graphite pencil drawing of ',', fine cross-hatching, soft shading, hand-drawn artwork filling the whole frame, plain white background',', color, photo'],ink:['pen and ink drawing of ',', crisp linework, hatching, artwork filling the whole frame, plain white background',', color, photo'],water:['watercolor painting of ',', soft washes, delicate detail, artwork filling the whole frame',''],none:['','','']};
 const SHP={sq:[512,512],wide:[576,448],tall:[448,576]};
@@ -56,24 +56,44 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let tid=0,rid=null;
 async function api(path,opt){const r=await fetch(API+path,opt);let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&(j.message||JSON.stringify(j.errors||j)))||('HTTP '+r.status));return j}
 function busy(b){go.disabled=b;cx.hidden=!b;if(b){op.hidden=sv.hidden=true}}
+const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+const curKey=()=>{const kv=keyIn.value.trim();return /^[\w-]{16,40}$/.test(kv)?kv:'0000000000'};
+const b2d=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(b)});
+const setModel=m=>{if(m&&![...mdl.options].some(o=>o.value==m)){const o=document.createElement('option');o.value=o.textContent=m;mdl.appendChild(o)}mdl.value=m||''};
+img.onerror=()=>{if(img.getAttribute('src'))st.textContent='That image link has expired. Draw it again.'};
+let burl=null;
+async function show(src,meta){let u=src;if(src.indexOf('data:')==0){try{const b=await (await fetch(src)).blob();if(burl)URL.revokeObjectURL(burl);burl=u=URL.createObjectURL(b)}catch(e){}}
+img.src=u;img.alt=meta.prompt;sheet.style.setProperty('--ar',(meta.w/(meta.h*.92)).toFixed(4));sheet.classList.toggle('crop',crp.checked);img.hidden=false;ph.hidden=true;op.href=u;op.hidden=sv.hidden=clr.hidden=false}
+function showLast(rf){const l=LS.get('sk_last');if(!l||!l.src){img.hidden=true;ph.hidden=false;ph.textContent='Your drawing will appear here.';op.hidden=sv.hidden=clr.hidden=true;return false}
+if(rf){q.value=l.prompt;$('sty').value=l.style;$('shp').value=l.dim;setModel(l.model)}
+show(l.src,l);st.textContent='Your last drawing'+(l.temp?' (no local copy could be saved, so the link may have expired)':'')+'.';return true}
+async function keep(g,meta){let d=null;if(g.img.indexOf('http')!=0)d='data:image/webp;base64,'+g.img;else{try{const r=await fetch(g.img);if(!r.ok)throw 0;d=await b2d(await r.blob())}catch(e){}}
+LS.del('sk_last');if(d)return{src:d,saved:LS.set('sk_last',{...meta,src:d,when:Date.now()})};LS.set('sk_last',{...meta,src:g.img,temp:1,when:Date.now()});return{src:g.img,saved:false}}
 async function draw(){
 const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
 const s=STY[$('sty').value],m=mdl.value,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),id=++tid,dim=$('shp').value,SZ={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
-let [w,h]=(xl?BIG:SZ)[dim];const kv=keyIn.value.trim();KEY=/^[\w-]{16,40}$/.test(kv)?kv:'0000000000';
+let [w,h]=(xl?BIG:SZ)[dim];KEY=curKey();
+const old=LS.get('sk_job');if(old)fetch(API+'/generate/status/'+old.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');
 busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';st.textContent='Sending your prompt…';
 try{
 const hd={'Content-Type':'application/json',apikey:KEY};
 const send=(w,h)=>api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+t+s[1]+' ### '+NEGB+s[2],models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
 let sub;try{sub=await send(w,h)}catch(e){if(xl&&/kudos/i.test(e.message)){[w,h]=SZ[dim];st.textContent='That size needs kudos, retrying smaller…';sub=await send(w,h)}else throw e}
-sheet.style.setProperty('--ar',(w/(h*.92)).toFixed(4));
-rid=sub.id;const t0=Date.now();let fails=0;
+const job={id:sub.id,prompt:t,style:$('sty').value,model:m,dim,w,h,t0:Date.now()};
+LS.set('sk_job',job);
+await follow(job,id);
+}catch(e){if(id===tid){showLast()||(ph.textContent='Nothing drawn yet.');st.textContent='Couldn’t draw that: '+e.message;busy(false)}}}
+async function follow(job,id){
+rid=job.id;busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';
+try{
+const t0=job.t0;let fails=0,first=1;
 while(id===tid){
-const el=Date.now()-t0;
-await sleep(el<60000?3000:el<300000?5000:8000);
+if(!first)await sleep(Date.now()-t0<60000?3000:Date.now()-t0<300000?5000:8000);
+first=0;
 if(id!==tid)return;
 let c;
 try{c=await api('/generate/check/'+rid,{headers:{apikey:KEY}});fails=0}
-catch(e){if(/not found|expired/i.test(e.message)||++fails>10)throw e;st.textContent='Connection hiccup, still trying…';continue}
+catch(e){if(/not found|expired/i.test(e.message))throw e;if(++fails>10){e.keep=1;throw e}st.textContent='Connection hiccup, still trying…';continue}
 if(c.faulted)throw new Error('the network could not complete this request. Try again.');
 if(c.is_possible===false)throw new Error('no GPU online can run that model or size right now. Pick Auto or another model.');
 if(c.done||c.finished)break;
@@ -81,21 +101,26 @@ const sec=Math.round((Date.now()-t0)/1000);
 st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(c.wait_time?'About '+c.wait_time+' s. ':'')+'('+sec+' s so far)'+(sec>180&&!c.processing?' Busy right now: keep waiting, or Cancel and try Auto or another model.':'');
 }
 if(id!==tid)return;
-let res;for(let k=0;;k++){try{res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(k>=3)throw e;await sleep(4000*(k+1))}}
+let res;for(let n=0;;n++){try{res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(n>=3){e.keep=1;throw e}await sleep(4000*(n+1))}}
 const g=res.generations&&res.generations[0];
 if(!g||!g.img)throw new Error('no image came back (it may have been filtered). Try rewording.');
-img.src=g.img.indexOf('http')==0?g.img:'data:image/webp;base64,'+g.img;
-img.alt=t;sheet.classList.toggle('crop',crp.checked);img.hidden=false;ph.hidden=true;op.href=img.src;op.hidden=sv.hidden=false;
-st.textContent='Done'+(g.model?' with '+g.model:'')+'.';
-}catch(e){if(id===tid){ph.textContent='Nothing drawn yet.';st.textContent='Couldn’t draw that: '+e.message}}
+const meta={prompt:job.prompt,style:job.style,model:job.model,dim:job.dim,w:job.w,h:job.h},kept=await keep(g,meta);
+LS.del('sk_job');
+await show(kept.src,meta);
+st.textContent='Done'+(g.model?' with '+g.model:'')+(kept.saved?'. Saved in this browser.':'. Couldn’t save a copy in this browser, so use Save now.');
+}catch(e){if(id===tid){if(!e.keep)LS.del('sk_job');showLast()||(ph.textContent='Nothing drawn yet.');st.textContent=(e.keep?'Couldn’t reach the network, but your drawing is still pending. Reload this page to check again. ':'Couldn’t draw that: ')+e.message}}
 finally{if(id===tid)busy(false)}}
-cx.onclick=()=>{tid++;if(rid)fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});busy(false);ph.textContent='Cancelled.';st.textContent=''};
+cx.onclick=()=>{tid++;if(rid&&LS.get('sk_job'))fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');busy(false);showLast()||(ph.textContent='Cancelled.');st.textContent='Cancelled.'};
+clr.onclick=()=>{tid++;if(rid&&LS.get('sk_job'))fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');LS.del('sk_last');busy(false);img.hidden=true;ph.hidden=false;ph.textContent='Your drawing will appear here.';st.textContent='Cleared.';op.hidden=sv.hidden=clr.hidden=true};
 sv.onclick=async()=>{try{let o=await (await fetch(img.src)).blob();if(crp.checked){const bm=await createImageBitmap(o),c=document.createElement('canvas');c.width=bm.width;c.height=Math.round(bm.height*.92);c.getContext('2d').drawImage(bm,0,0);o=await new Promise(r=>c.toBlob(r,'image/png'))}const a=document.createElement('a');a.href=URL.createObjectURL(o);a.download=crp.checked?'sketch.png':'sketch.webp';a.click()}catch(e){window.open(img.src,'_blank')}};
 go.onclick=draw;crp.onchange=()=>sheet.classList.toggle('crop',crp.checked);
 try{localStorage.removeItem('horde_key');keyIn.value=localStorage.getItem('horde_key_v2')||''}catch(e){}
 keyIn.onchange=()=>{try{localStorage.setItem('horde_key_v2',keyIn.value.trim())}catch(e){}};
-fetch(API+'/status/models?type=image').then(r=>r.json()).then(L=>{L.sort((a,b)=>b.count-a.count).slice(0,14).forEach(x=>{const o=document.createElement('option');o.value=x.name;o.textContent=x.name+' ('+x.count+' GPUs)';mdl.appendChild(o)})}).catch(()=>{});
+fetch(API+'/status/models?type=image').then(r=>r.json()).then(L=>{L.sort((a,b)=>b.count-a.count).slice(0,14).forEach(x=>{if([...mdl.options].some(z=>z.value==x.name))return;const o=document.createElement('option');o.value=x.name;o.textContent=x.name+' ('+x.count+' GPUs)';mdl.appendChild(o)})}).catch(()=>{});
 q.addEventListener('keydown',e=>{if(e.key=='Enter'){q.blur();draw()}});
+const j0=LS.get('sk_job');
+if(j0&&j0.id&&Date.now()-j0.t0<3*3600e3){KEY=curKey();q.value=j0.prompt;$('sty').value=j0.style;$('shp').value=j0.dim;setModel(j0.model);st.textContent='Picking up your drawing…';follow(j0,++tid)}
+else{if(j0)LS.del('sk_job');showLast(1)}
 ['A lighthouse keeper mending a net','A dragon guarding a castle on a hill at sunset','A robot holding a red balloon','Three cats sleeping on a sofa','A cozy house next to a winding river with two pine trees','A pirate ship sailing under a full moon'].forEach(t=>{const b=document.createElement('button');b.className='g';b.textContent=t;b.onclick=()=>{q.value=t;draw()};$('ch').appendChild(b)});
 })();
 </script></body></html>
