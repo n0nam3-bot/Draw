@@ -49,7 +49,7 @@ select{max-width:100%}
 (()=>{
 const API='https://aihorde.net/api/v2',$=id=>document.getElementById(id);let KEY='0000000000';
 const q=$('q'),st=$('st'),img=$('img'),go=$('go'),cx=$('cx'),op=$('op'),sv=$('sv'),ph=$('ph'),mdl=$('mdl'),crp=$('crp'),keyIn=$('key'),sheet=$('sheet'),clr=$('clr');
-const NEGB='(signature:1.5), (watermark:1.5), (text:1.4), letters, writing, caption, logo, border, frame, blurry, deformed, bad anatomy, extra limbs, duplicate, low quality';
+const NEGB='(nsfw:1.5), nude, naked, nipples, cleavage, lingerie, underwear, suggestive, revealing clothes, (signature:1.5), (watermark:1.5), (text:1.4), letters, writing, caption, logo, border, frame, blurry, deformed, bad anatomy, extra limbs, duplicate, low quality';
 const STY={pencil:['detailed graphite pencil drawing of ',', fine cross-hatching, soft shading, hand-drawn artwork filling the whole frame, plain white background',', color, photo'],ink:['pen and ink drawing of ',', crisp linework, hatching, artwork filling the whole frame, plain white background',', color, photo'],water:['watercolor painting of ',', soft washes, delicate detail, artwork filling the whole frame',''],none:['','','']};
 const SHP={sq:[512,512],wide:[576,448],tall:[448,576]};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -69,20 +69,22 @@ if(rf){q.value=l.prompt;$('sty').value=l.style;$('shp').value=l.dim;setModel(l.m
 show(l.src,l);st.textContent='Your last drawing'+(l.temp?' (no local copy could be saved, so the link may have expired)':'')+'.';return true}
 async function keep(g,meta){let d=null;if(g.img.indexOf('http')!=0)d='data:image/webp;base64,'+g.img;else{try{const r=await fetch(g.img);if(!r.ok)throw 0;d=await b2d(await r.blob())}catch(e){}}
 LS.del('sk_last');if(d)return{src:d,saved:LS.set('sk_last',{...meta,src:d,when:Date.now()})};LS.set('sk_last',{...meta,src:g.img,temp:1,when:Date.now()});return{src:g.img,saved:false}}
+async function submit(p,tries){
+const s=STY[p.style],m=p.model,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),SZ={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
+let [w,h]=(xl?BIG:SZ)[p.dim];
+const hd={'Content-Type':'application/json',apikey:KEY};
+const send=(w,h)=>api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+p.prompt+s[1]+', safe for work ### '+NEGB+s[2],models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
+let sub;try{sub=await send(w,h)}catch(e){if(xl&&/kudos/i.test(e.message)){[w,h]=SZ[p.dim];st.textContent='That size needs kudos, retrying smaller…';sub=await send(w,h)}else throw e}
+const job={...p,id:sub.id,w,h,t0:Date.now(),tries};LS.set('sk_job',job);rid=sub.id;return job}
 async function draw(){
 const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
-const s=STY[$('sty').value],m=mdl.value,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),id=++tid,dim=$('shp').value,SZ={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
-let [w,h]=(xl?BIG:SZ)[dim];KEY=curKey();
+const id=++tid;KEY=curKey();
 const old=LS.get('sk_job');if(old)fetch(API+'/generate/status/'+old.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');
 busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';st.textContent='Sending your prompt…';
-try{
-const hd={'Content-Type':'application/json',apikey:KEY};
-const send=(w,h)=>api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+t+s[1]+' ### '+NEGB+s[2],models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
-let sub;try{sub=await send(w,h)}catch(e){if(xl&&/kudos/i.test(e.message)){[w,h]=SZ[dim];st.textContent='That size needs kudos, retrying smaller…';sub=await send(w,h)}else throw e}
-const job={id:sub.id,prompt:t,style:$('sty').value,model:m,dim,w,h,t0:Date.now()};
-LS.set('sk_job',job);
-await follow(job,id);
-}catch(e){if(id===tid){showLast()||(ph.textContent='Nothing drawn yet.');st.textContent='Couldn’t draw that: '+e.message;busy(false)}}}
+try{const job=await submit({prompt:t,style:$('sty').value,model:mdl.value,dim:$('shp').value},0);
+if(id!==tid){fetch(API+'/generate/status/'+job.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');return}
+await follow(job,id)}
+catch(e){if(id===tid){showLast()||(ph.textContent='Nothing drawn yet.');st.textContent='Couldn’t draw that: '+e.message;busy(false)}}}
 async function follow(job,id){
 rid=job.id;busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';
 try{
@@ -102,8 +104,14 @@ st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position
 }
 if(id!==tid)return;
 let res;for(let n=0;;n++){try{res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(n>=3){e.keep=1;throw e}await sleep(4000*(n+1))}}
-const g=res.generations&&res.generations[0];
-if(!g||!g.img)throw new Error('no image came back (it may have been filtered). Try rewording.');
+const gens=res.generations||[],g=gens.find(x=>x&&x.img&&!x.censored);
+if(!g){const tries=job.tries||0;
+if(gens.some(x=>x&&x.censored)){
+if(tries<2){st.textContent='The volunteer’s safety filter flagged that image (it can misfire), so I’m trying again ('+(tries+1)+' of 2)…';const nj=await submit(job,tries+1);
+if(id!==tid){fetch(API+'/generate/status/'+nj.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');return}
+await follow(nj,id);return}
+throw new Error('the safety filter flagged all 3 attempts. Try rewording (add clothing and a setting, like “in a park”) or pick another model.')}
+throw new Error('no image came back. Try rewording.')}
 const meta={prompt:job.prompt,style:job.style,model:job.model,dim:job.dim,w:job.w,h:job.h},kept=await keep(g,meta);
 LS.del('sk_job');
 await show(kept.src,meta);
