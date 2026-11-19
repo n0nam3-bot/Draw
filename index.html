@@ -4,131 +4,179 @@
 <meta name="color-scheme" content="light dark">
 <title>Sketchbook: free text-to-image</title>
 <style>
-:root{--bg:#ece6d8;--ink:#2a2926;--mut:#6a665c;--line:#cdc5b2;--paper:#f8f5ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1b18;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831}}
-:root[data-theme="dark"]{--bg:#1c1b18;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831}
+:root{--bg:#ece6d8;--card:#f8f5ee;--ink:#2a2926;--mut:#6a665c;--line:#d6cdb9;--acc:#a9472b;--ai:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171613;--card:#211f1b;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831;--acc:#d9784f;--ai:#1a1209}}
+:root[data-theme="dark"]{--bg:#171613;--card:#211f1b;--ink:#ece7da;--mut:#a29c8c;--line:#3a3831;--acc:#d9784f;--ai:#1a1209}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:760px;margin:0 auto;padding:16px}
-h1{font:600 1.6rem/1.2 Georgia,"Times New Roman",serif;margin:.4em 0 .2em}
-.sub,.hint{color:var(--mut);margin:.2em 0 .8em}.hint{font-size:.85rem}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
-input,select{min-height:44px;padding:0 12px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink)}
-input{flex:1 1 260px}
+body{margin:0;background:var(--bg) repeating-linear-gradient(0deg,rgba(128,118,96,.06) 0 1px,transparent 1px 4px);color:var(--ink);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:14px 14px 40px}
+h1{font:italic 600 2rem/1.1 Georgia,"Times New Roman",serif;margin:.3em 0 .1em}
+h2{font-size:1.05rem;margin:0}
+.sub,.hint,.ph{color:var(--mut);margin:.2em 0 .6em}.hint{font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 8px 24px -18px rgba(0,0,0,.35)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.between{justify-content:space-between}
+input,select{min-height:44px;padding:0 12px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);max-width:100%}
 select option{color:#000}
-button,.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;text-decoration:none}
-button.g,.btn.g{background:transparent;color:var(--ink)}
+#q{flex:1 1 240px}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none}
+.pri{background:var(--acc);border-color:var(--acc);color:var(--ai)}
 button:disabled{opacity:.5;cursor:wait}
-.chips button{font-weight:400;font-size:.85rem;min-height:36px;border-radius:99px;border-color:var(--line)}
-:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.sheet{min-height:260px;display:flex;align-items:center;justify-content:center;background:var(--paper);color:#6a665c;border:1px solid var(--line);border-radius:6px;margin:12px 0;overflow:hidden}
-.sheet img{display:block;max-width:100%;height:auto}
-#st{min-height:1.5em;margin:.4em 0}
-label{display:flex;align-items:center;gap:8px;color:var(--mut)}
-.sheet.crop img{width:100%;height:auto;aspect-ratio:var(--ar);object-fit:cover;object-position:top}
-details{margin:10px 0;color:var(--mut)}summary{cursor:pointer;min-height:32px}
-details input{width:100%;box-sizing:border-box;margin-top:6px}
-select{max-width:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.chips button{font-weight:400;font-size:.85rem;min-height:36px;border-radius:99px;border-color:var(--line)}
+summary{cursor:pointer;color:var(--mut);min-height:32px;padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+.grid label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mut)}.grid .wide{grid-column:1/-1}.grid .ck{flex-direction:row;align-items:center;gap:8px}
+.grid input[type=checkbox]{min-height:0;width:20px;height:20px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px}
+.res figure{margin:0}.res img{display:block;width:100%;height:auto;border-radius:8px;cursor:zoom-in;background:#fff}
+.res.crop img{aspect-ratio:var(--ar);object-fit:cover;object-position:top}
+.sk{aspect-ratio:var(--ar,1);border-radius:8px;background:linear-gradient(100deg,var(--line) 30%,transparent 50%,var(--line) 70%);background-size:200% 100%;animation:sh 1.4s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+#bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:10px}
+#bar i{display:block;height:100%;width:30%;background:var(--acc);animation:ind 1.2s ease-in-out infinite}
+#bar.set i{animation:none;transition:width .6s}
+@keyframes ind{from{margin-left:-30%}to{margin-left:100%}}
+#st{min-height:1.5em;margin:.6em 0 .2em}
+.gal{display:flex;gap:8px;overflow-x:auto;padding:8px 0 4px}.gal button{flex:0 0 auto;padding:0;min-height:0;border-color:var(--line);overflow:hidden}.gal img{display:block;height:84px;width:auto}
+dialog{border:0;border-radius:14px;padding:12px;max-width:min(94vw,900px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog img{display:block;max-width:100%;max-height:68vh;margin:0 auto 8px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){.sk,#bar i{animation:none}}
 </style></head><body><main>
 <h1>✏️ Sketchbook</h1>
 <p class="sub">Type anything and community GPUs draw it for free. No account, no key, no install.</p>
-<div class="row"><input id="q" aria-label="What should I draw?" placeholder="A lighthouse keeper mending a net…" enterkeyhint="go" name="drawing-prompt" autocomplete="off" data-lpignore="true" data-1p-ignore><button id="go">Draw it</button></div>
-<div class="row"><label>Style <select id="sty"><option value="pencil">Pencil sketch</option><option value="ink">Ink drawing</option><option value="water">Watercolor</option><option value="none">No style</option></select></label>
-<label>Shape <select id="shp"><option value="sq">Square</option><option value="wide">Wide</option><option value="tall">Tall</option></select></label>
-<label>Model <select id="mdl"><option value="">Auto</option></select></label>
-<label><input type="checkbox" id="crp" checked> Trim bottom edge</label></div>
-<div class="row chips" id="ch"></div>
-<div class="sheet" id="sheet"><img id="img" alt="" hidden><p id="ph">Your drawing will appear here.</p></div>
-<p id="st" aria-live="polite"></p>
-<div class="row"><button id="cx" class="g" hidden>Cancel</button><button id="clr" class="g" hidden>Clear</button><a id="op" class="btn g" target="_blank" rel="noopener" hidden>Open full image</a><button id="sv" class="g" hidden>Save</button></div>
-<details><summary>Faster queue (optional)</summary><p class="hint">A free AI Horde account gets higher priority than anonymous use. <a href="https://aihorde.net/register" target="_blank" rel="noopener">Register</a>, then paste your key here. It stays on this device.</p><input id="key" type="text" name="horde-key" aria-label="AI Horde API key" placeholder="Your API key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore readonly onfocus="this.removeAttribute('readonly')"></details>
-<p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes. Your prompt is visible to the volunteers who run it, so don’t type anything private. Your last drawing is saved in this browser, and a pending request resumes when you reopen the page.</p>
+<section class="card">
+<div class="row"><input id="q" aria-label="What should I draw?" placeholder="A lighthouse keeper mending a net…" enterkeyhint="go" name="drawing-prompt" autocomplete="off" data-lpignore="true" data-1p-ignore><button id="go" class="pri">Draw</button></div>
+<div class="chips" id="ch"></div>
+<details><summary>Options</summary><div class="grid">
+<label>Style<select id="sty"><option value="pencil">Pencil sketch</option><option value="ink">Ink drawing</option><option value="water">Watercolor</option><option value="none">No style</option></select></label>
+<label>Shape<select id="shp"><option value="sq">Square</option><option value="wide">Wide</option><option value="tall">Tall</option></select></label>
+<label>Versions<select id="num"><option>1</option><option selected>2</option><option>4</option></select></label>
+<label>Model<select id="mdl"><option value="">Fast (any GPU)</option><option value="*best">Best quality (slower)</option></select></label>
+<label class="ck"><input type="checkbox" id="crp" checked> Trim bottom edge</label>
+<label class="wide">Free AI Horde key (optional, faster queue)<input id="key" type="text" name="horde-key" placeholder="Your API key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore readonly onfocus="this.removeAttribute('readonly')"></label>
+</div></details>
+</section>
+<section class="card"><div id="bar" hidden><i></i></div><div id="res" class="res"><p class="ph">Your drawings will appear here.</p></div><p id="st" aria-live="polite"></p><div class="row"><button id="cx" hidden>Cancel</button></div></section>
+<section class="card"><div class="row between"><h2>Gallery</h2><button id="gclr" hidden>Clear all</button></div><div id="gal" class="gal"></div></section>
+<p class="hint">Powered by the AI Horde, a volunteer GPU network. Anonymous requests have the lowest priority, so waits range from seconds to a few minutes; a free key from <a href="https://aihorde.net/register" target="_blank" rel="noopener">aihorde.net</a> gets a faster queue. Your prompt is visible to the volunteers who run it, so don’t type anything private. The last 24 drawings are saved in this browser, and a pending request resumes when you reopen the page.</p>
 </main>
+<dialog id="lb"><img id="lbi" alt=""><p id="lbp" class="hint"></p><div class="row"><button id="lbs" class="pri">Save</button><a id="lbo" class="btn" target="_blank" rel="noopener">Open</a><button id="lbd">Delete</button><button id="lbc" onclick="this.closest('dialog').close()">Close</button></div></dialog>
 <script>
 (()=>{
-const API='https://aihorde.net/api/v2',$=id=>document.getElementById(id);let KEY='0000000000';
-const q=$('q'),st=$('st'),img=$('img'),go=$('go'),cx=$('cx'),op=$('op'),sv=$('sv'),ph=$('ph'),mdl=$('mdl'),crp=$('crp'),keyIn=$('key'),sheet=$('sheet'),clr=$('clr');
+const API='https://aihorde.net/api/v2',$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const q=$('q'),st=$('st'),go=$('go'),cx=$('cx'),res=$('res'),bar=$('bar'),mdl=$('mdl'),crp=$('crp'),keyIn=$('key'),gal=$('gal'),lb=$('lb'),lbi=$('lbi'),sh=$('shp'),sty=$('sty'),num=$('num'),gclr=$('gclr');
+let KEY='0000000000',tid=0,rid=null,MODELS=[],urls=[],gurls=[],MEM=[],lbe=null,lbu=null;
 const NEGB='(nsfw:1.5), nude, naked, nipples, cleavage, lingerie, underwear, suggestive, revealing clothes, (signature:1.5), (watermark:1.5), (text:1.4), letters, writing, caption, logo, border, frame, blurry, deformed, bad anatomy, extra limbs, duplicate, low quality';
 const STY={pencil:['detailed graphite pencil drawing of ',', fine cross-hatching, soft shading, hand-drawn artwork filling the whole frame, plain white background',', color, photo'],ink:['pen and ink drawing of ',', crisp linework, hatching, artwork filling the whole frame, plain white background',', color, photo'],water:['watercolor painting of ',', soft washes, delicate detail, artwork filling the whole frame',''],none:['','','']};
-const SHP={sq:[512,512],wide:[576,448],tall:[448,576]};
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let tid=0,rid=null;
-async function api(path,opt){const r=await fetch(API+path,opt);let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&(j.message||JSON.stringify(j.errors||j)))||('HTTP '+r.status));return j}
-function busy(b){go.disabled=b;cx.hidden=!b;if(b){op.hidden=sv.hidden=true}}
+const DIMS={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 const curKey=()=>{const kv=keyIn.value.trim();return /^[\w-]{16,40}$/.test(kv)?kv:'0000000000'};
-const b2d=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(b)});
+async function api(path,opt){const r=await fetch(API+path,opt);let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error((j&&(j.message||JSON.stringify(j.errors||j)))||('HTTP '+r.status));return j}
+const cancelReq=id=>fetch(API+'/generate/status/'+id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});
+// ---- gallery storage (IndexedDB, memory fallback) ----
+const DB=new Promise((ok,no)=>{try{const r=indexedDB.open('sketchbook',1);r.onupgradeneeded=()=>r.result.createObjectStore('g',{keyPath:'id'});r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
+const tx=(m,f)=>DB.then(db=>new Promise((ok,no)=>{const t=db.transaction('g',m),r=f(t.objectStore('g'));t.oncomplete=()=>ok(r.result);t.onerror=t.onabort=()=>no(t.error)}));
+const gAll=()=>tx('readonly',s=>s.getAll()).catch(()=>MEM).then(a=>(a||[]).slice().sort((x,y)=>y.when-x.when||x.idx-y.idx));
+const gPut=e=>tx('readwrite',s=>s.put(e)).catch(()=>{MEM.push(e)});
+const gDel=id=>tx('readwrite',s=>s.delete(id)).catch(()=>{MEM=MEM.filter(e=>e.id!=id)});
+const gClr=()=>tx('readwrite',s=>s.clear()).catch(()=>{}).then(()=>{MEM=[]});
+const mkUrl=(e,arr)=>{if(!e.blob)return e.url;const u=URL.createObjectURL(e.blob);arr.push(u);return u};
+// ---- rendering ----
+function showGroup(es){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];res.innerHTML='';
+if(!es.length){res.innerHTML='<p class="ph">Your drawings will appear here.</p>';return}
+res.style.setProperty('--ar',(es[0].w/(es[0].h*.92)).toFixed(4));res.className='res'+(crp.checked?' crop':'');
+es.forEach(e=>{const f=document.createElement('figure'),i=new Image();i.src=mkUrl(e,urls);i.alt=e.prompt;i.onclick=()=>openLb(e);f.appendChild(i);res.appendChild(f)})}
+function lastShow(all){if(!all||!all.length)return showGroup([]);const g=all[0].group;showGroup(all.filter(e=>e.group==g).sort((a,b)=>a.idx-b.idx))}
+async function refreshGal(){const all=await gAll();gurls.forEach(u=>URL.revokeObjectURL(u));gurls=[];gal.innerHTML='';gclr.hidden=!all.length;
+if(!all.length)gal.innerHTML='<p class="ph">Nothing saved yet.</p>';
+all.forEach(e=>{const b=document.createElement('button'),i=new Image();i.src=mkUrl(e,gurls);i.alt=e.prompt;b.title=e.prompt;b.appendChild(i);b.onclick=()=>openLb(e);gal.appendChild(b)});return all}
+function openLb(e){lbe=e;if(lbu&&lbe.blob)URL.revokeObjectURL(lbu);lbu=e.blob?URL.createObjectURL(e.blob):e.url;lbi.src=lbu;lbi.alt=e.prompt;$('lbp').textContent=e.prompt+(e.model?' · '+e.model:'');$('lbo').href=lbu;lb.showModal?lb.showModal():lb.setAttribute('open','')}
+$('lbs').onclick=async()=>{try{let b=lbe.blob||await (await fetch(lbe.url)).blob(),name='sketch.webp';
+if(crp.checked){const bm=await createImageBitmap(b),c=document.createElement('canvas');c.width=bm.width;c.height=Math.round(bm.height*.92);c.getContext('2d').drawImage(bm,0,0);b=await new Promise(r=>c.toBlob(r,'image/png'));name='sketch.png'}
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click()}catch(e){window.open(lbu,'_blank')}};
+$('lbd').onclick=async()=>{await gDel(lbe.id);lb.close?lb.close():lb.removeAttribute('open');lastShow(await refreshGal())};
+function busy(b,job){go.disabled=b;cx.hidden=!b;bar.hidden=!b;if(b){const n=job?job.num:+num.value,d=job?[job.w,job.h]:DIMS[sh.value];res.style.setProperty('--ar',(d[0]/d[1]).toFixed(3));res.className='res';res.innerHTML='<div class="sk"></div>'.repeat(n||1);bar.className='';bar.firstChild.style.width=''}}
 const setModel=m=>{if(m&&![...mdl.options].some(o=>o.value==m)){const o=document.createElement('option');o.value=o.textContent=m;mdl.appendChild(o)}mdl.value=m||''};
-img.onerror=()=>{if(img.getAttribute('src'))st.textContent='That image link has expired. Draw it again.'};
-let burl=null;
-async function show(src,meta){let u=src;if(src.indexOf('data:')==0){try{const b=await (await fetch(src)).blob();if(burl)URL.revokeObjectURL(burl);burl=u=URL.createObjectURL(b)}catch(e){}}
-img.src=u;img.alt=meta.prompt;sheet.style.setProperty('--ar',(meta.w/(meta.h*.92)).toFixed(4));sheet.classList.toggle('crop',crp.checked);img.hidden=false;ph.hidden=true;op.href=u;op.hidden=sv.hidden=clr.hidden=false}
-function showLast(rf){const l=LS.get('sk_last');if(!l||!l.src){img.hidden=true;ph.hidden=false;ph.textContent='Your drawing will appear here.';op.hidden=sv.hidden=clr.hidden=true;return false}
-if(rf){q.value=l.prompt;$('sty').value=l.style;$('shp').value=l.dim;setModel(l.model)}
-show(l.src,l);st.textContent='Your last drawing'+(l.temp?' (no local copy could be saved, so the link may have expired)':'')+'.';return true}
-async function keep(g,meta){let d=null;if(g.img.indexOf('http')!=0)d='data:image/webp;base64,'+g.img;else{try{const r=await fetch(g.img);if(!r.ok)throw 0;d=await b2d(await r.blob())}catch(e){}}
-LS.del('sk_last');if(d)return{src:d,saved:LS.set('sk_last',{...meta,src:d,when:Date.now()})};LS.set('sk_last',{...meta,src:g.img,temp:1,when:Date.now()});return{src:g.img,saved:false}}
+function best(){const ok=MODELS.filter(x=>x.count>=1&&(x.eta||0)<=300);for(const re of [/flux/i,/xl/i]){const x=ok.filter(y=>re.test(y.name)).sort((a,b)=>(a.eta||0)-(b.eta||0))[0];if(x)return x.name}return ''}
+// ---- requests ----
 async function submit(p,tries){
-const s=STY[p.style],m=p.model,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),SZ={sq:[512,512],wide:[576,448],tall:[448,576]},BIG={sq:[1024,1024],wide:[1152,896],tall:[896,1152]};
-let [w,h]=(xl?BIG:SZ)[p.dim];
+const m=p.model==='*best'?best():p.model,fx=/flux/i.test(m),xl=/xl|pony|juggernaut|albedo/i.test(m),s=STY[p.style],A=[];
+if(xl)A.push([...BIG[p.dim],p.num]);A.push([...DIMS[p.dim],p.num]);if(p.num>1)A.push([...DIMS[p.dim],1]);
 const hd={'Content-Type':'application/json',apikey:KEY};
-const send=(w,h)=>api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt:s[0]+p.prompt+s[1]+', safe for work ### '+NEGB+s[2],models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n:1},nsfw:false,censor_nsfw:true,trusted_workers:false})});
-let sub;try{sub=await send(w,h)}catch(e){if(xl&&/kudos/i.test(e.message)){[w,h]=SZ[p.dim];st.textContent='That size needs kudos, retrying smaller…';sub=await send(w,h)}else throw e}
-const job={...p,id:sub.id,w,h,t0:Date.now(),tries};LS.set('sk_job',job);rid=sub.id;return job}
-async function draw(){
-const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
-const id=++tid;KEY=curKey();
-const old=LS.get('sk_job');if(old)fetch(API+'/generate/status/'+old.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');
-busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';st.textContent='Sending your prompt…';
-try{const job=await submit({prompt:t,style:$('sty').value,model:mdl.value,dim:$('shp').value},0);
-if(id!==tid){fetch(API+'/generate/status/'+job.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');return}
-await follow(job,id)}
-catch(e){if(id===tid){showLast()||(ph.textContent='Nothing drawn yet.');st.textContent='Couldn’t draw that: '+e.message;busy(false)}}}
+const prompt=s[0]+p.prompt+s[1]+(/anime|manga|waifu|chibi/i.test(p.prompt)?', anime style, masterpiece, best quality':'')+', safe for work ### '+NEGB+s[2];
+let sub,w,h,n;
+for(let i=0;i<A.length;i++){[w,h,n]=A[i];
+try{sub=await api('/generate/async',{method:'POST',headers:hd,body:JSON.stringify({prompt,models:m?[m]:undefined,params:{sampler_name:fx?'k_euler':'k_euler_a',cfg_scale:fx?1:7,width:w,height:h,steps:fx?8:28,n},nsfw:false,censor_nsfw:true,trusted_workers:false})});break}
+catch(e){if(i==A.length-1)throw e;st.textContent='Adjusting the request and retrying…'}}
+const job={...p,model:m,id:sub.id,w,h,num:n,t0:Date.now(),tries};LS.set('sk_job',job);rid=sub.id;return job}
+async function mk(g,job,i){let blob=null;const src=g.img.indexOf('http')==0?g.img:'data:image/webp;base64,'+g.img;
+try{blob=await (await fetch(src)).blob();if(!blob||!blob.size)blob=null}catch(e){}
+return{id:job.id+'_'+i,group:job.id,idx:i,when:Date.now(),prompt:job.prompt,style:job.style,model:g.model||job.model,dim:job.dim,w:job.w,h:job.h,blob,url:blob?null:src}}
+function done(){if(document.hidden){document.title='✅ Ready · Sketchbook';navigator.vibrate&&navigator.vibrate(200)}}
 async function follow(job,id){
-rid=job.id;busy(true);img.hidden=true;ph.hidden=false;ph.textContent='Drawing…';
+rid=job.id;busy(true,job);
 try{
-const t0=job.t0;let fails=0,first=1;
+const t0=job.t0,want=job.num||1;let fails=0,first=1;
 while(id===tid){
 if(!first)await sleep(Date.now()-t0<60000?3000:Date.now()-t0<300000?5000:8000);
-first=0;
-if(id!==tid)return;
+first=0;if(id!==tid)return;
 let c;
 try{c=await api('/generate/check/'+rid,{headers:{apikey:KEY}});fails=0}
 catch(e){if(/not found|expired/i.test(e.message))throw e;if(++fails>10){e.keep=1;throw e}st.textContent='Connection hiccup, still trying…';continue}
 if(c.faulted)throw new Error('the network could not complete this request. Try again.');
-if(c.is_possible===false)throw new Error('no GPU online can run that model or size right now. Pick Auto or another model.');
-if(c.done||c.finished)break;
-const sec=Math.round((Date.now()-t0)/1000);
-st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(c.wait_time?'About '+c.wait_time+' s. ':'')+'('+sec+' s so far)'+(sec>180&&!c.processing?' Busy right now: keep waiting, or Cancel and try Auto or another model.':'');
+if(c.is_possible===false)throw new Error('no GPU online can run that model or size right now. Pick another model.');
+if(c.done===true||c.finished>=want)break;
+const el=Date.now()-t0,sec=Math.round(el/1000),w=c.wait_time||0;
+bar.className=w?'set':'';bar.firstChild.style.width=w?Math.min(95,el/(el+w*1000)*100)+'%':'';
+st.textContent=(c.processing?'Drawing… ':'In the queue… ')+(c.queue_position?'Position '+c.queue_position+'. ':'')+(w?'About '+w+' s. ':'')+'('+sec+' s so far)'+(sec>180&&!c.processing?' Busy right now: keep waiting, or Cancel and try another model.':'');
 }
 if(id!==tid)return;
-let res;for(let n=0;;n++){try{res=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(n>=3){e.keep=1;throw e}await sleep(4000*(n+1))}}
-const gens=res.generations||[],g=gens.find(x=>x&&x.img&&!x.censored);
-if(!g){const tries=job.tries||0;
+let r;for(let n=0;;n++){try{r=await api('/generate/status/'+rid,{headers:{apikey:KEY}});break}catch(e){if(n>=3){e.keep=1;throw e}await sleep(4000*(n+1))}}
+const gens=r.generations||[],good=gens.filter(x=>x&&x.img&&!x.censored);
+if(!good.length){const tries=job.tries||0;
 if(gens.some(x=>x&&x.censored)){
 if(tries<2){st.textContent='The volunteer’s safety filter flagged that image (it can misfire), so I’m trying again ('+(tries+1)+' of 2)…';const nj=await submit(job,tries+1);
-if(id!==tid){fetch(API+'/generate/status/'+nj.id,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');return}
+if(id!==tid){cancelReq(nj.id);LS.del('sk_job');return}
 await follow(nj,id);return}
-throw new Error('the safety filter flagged all 3 attempts. Try rewording (add clothing and a setting, like “in a park”) or pick another model.')}
+throw new Error('the safety filter flagged every attempt. Try rewording (add clothing and a setting, like “in a park”) or pick another model.')}
 throw new Error('no image came back. Try rewording.')}
-const meta={prompt:job.prompt,style:job.style,model:job.model,dim:job.dim,w:job.w,h:job.h},kept=await keep(g,meta);
+const es=[];for(let i=0;i<good.length;i++)es.push(await mk(good[i],job,i));
 LS.del('sk_job');
-await show(kept.src,meta);
-st.textContent='Done'+(g.model?' with '+g.model:'')+(kept.saved?'. Saved in this browser.':'. Couldn’t save a copy in this browser, so use Save now.');
-}catch(e){if(id===tid){if(!e.keep)LS.del('sk_job');showLast()||(ph.textContent='Nothing drawn yet.');st.textContent=(e.keep?'Couldn’t reach the network, but your drawing is still pending. Reload this page to check again. ':'Couldn’t draw that: ')+e.message}}
+for(const e of es)await gPut(e);
+const all=await refreshGal();for(const e of all.slice(24))await gDel(e.id);
+if(all.length>24)await refreshGal();
+showGroup(es);
+const hid=gens.length-good.length,nb=es.filter(e=>!e.blob).length;
+st.textContent='Done'+(good[0].model?' with '+good[0].model:'')+'.'+(hid?' '+hid+' flagged image'+(hid>1?'s were':' was')+' hidden.':'')+(nb?' Couldn’t keep a local copy of some images, so save them soon.':'');
+done();
+}catch(e){if(id===tid){if(!e.keep)LS.del('sk_job');lastShow(await refreshGal());st.textContent=(e.keep?'Couldn’t reach the network, but your drawing is still pending. Reload this page to check again. ':'Couldn’t draw that: ')+e.message}}
 finally{if(id===tid)busy(false)}}
-cx.onclick=()=>{tid++;if(rid&&LS.get('sk_job'))fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');busy(false);showLast()||(ph.textContent='Cancelled.');st.textContent='Cancelled.'};
-clr.onclick=()=>{tid++;if(rid&&LS.get('sk_job'))fetch(API+'/generate/status/'+rid,{method:'DELETE',headers:{apikey:KEY}}).catch(()=>{});LS.del('sk_job');LS.del('sk_last');busy(false);img.hidden=true;ph.hidden=false;ph.textContent='Your drawing will appear here.';st.textContent='Cleared.';op.hidden=sv.hidden=clr.hidden=true};
-sv.onclick=async()=>{try{let o=await (await fetch(img.src)).blob();if(crp.checked){const bm=await createImageBitmap(o),c=document.createElement('canvas');c.width=bm.width;c.height=Math.round(bm.height*.92);c.getContext('2d').drawImage(bm,0,0);o=await new Promise(r=>c.toBlob(r,'image/png'))}const a=document.createElement('a');a.href=URL.createObjectURL(o);a.download=crp.checked?'sketch.png':'sketch.webp';a.click()}catch(e){window.open(img.src,'_blank')}};
-go.onclick=draw;crp.onchange=()=>sheet.classList.toggle('crop',crp.checked);
+async function draw(){
+const t=q.value.trim();if(!t){st.textContent='Type something to draw first.';return}
+const id=++tid;KEY=curKey();
+const old=LS.get('sk_job');if(old)cancelReq(old.id);LS.del('sk_job');
+busy(true);st.textContent='Sending your prompt…';
+try{const job=await submit({prompt:t,style:sty.value,model:mdl.value,dim:sh.value,num:+num.value},0);
+if(id!==tid){cancelReq(job.id);LS.del('sk_job');return}
+await follow(job,id)}
+catch(e){if(id===tid){busy(false);lastShow(await refreshGal());st.textContent='Couldn’t draw that: '+e.message}}}
+cx.onclick=async()=>{tid++;const j=LS.get('sk_job');if(j)cancelReq(j.id);LS.del('sk_job');busy(false);lastShow(await refreshGal());st.textContent='Cancelled.'};
+gclr.onclick=async()=>{if(!confirm('Delete all saved drawings?'))return;tid++;const j=LS.get('sk_job');if(j)cancelReq(j.id);LS.del('sk_job');await gClr();busy(false);await refreshGal();showGroup([]);st.textContent='Cleared.'};
+$('go').onclick=draw;
+crp.onchange=()=>res.classList.toggle('crop',crp.checked);
+q.addEventListener('keydown',e=>{if(e.key=='Enter'){q.blur();draw()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)document.title='Sketchbook: free text-to-image'});
 try{localStorage.removeItem('horde_key');keyIn.value=localStorage.getItem('horde_key_v2')||''}catch(e){}
 keyIn.onchange=()=>{try{localStorage.setItem('horde_key_v2',keyIn.value.trim())}catch(e){}};
-fetch(API+'/status/models?type=image').then(r=>r.json()).then(L=>{L.sort((a,b)=>b.count-a.count).slice(0,14).forEach(x=>{if([...mdl.options].some(z=>z.value==x.name))return;const o=document.createElement('option');o.value=x.name;o.textContent=x.name+' ('+x.count+' GPUs)';mdl.appendChild(o)})}).catch(()=>{});
-q.addEventListener('keydown',e=>{if(e.key=='Enter'){q.blur();draw()}});
-const j0=LS.get('sk_job');
-if(j0&&j0.id&&Date.now()-j0.t0<3*3600e3){KEY=curKey();q.value=j0.prompt;$('sty').value=j0.style;$('shp').value=j0.dim;setModel(j0.model);st.textContent='Picking up your drawing…';follow(j0,++tid)}
-else{if(j0)LS.del('sk_job');showLast(1)}
-['A lighthouse keeper mending a net','A dragon guarding a castle on a hill at sunset','A robot holding a red balloon','Three cats sleeping on a sofa','A cozy house next to a winding river with two pine trees','A pirate ship sailing under a full moon'].forEach(t=>{const b=document.createElement('button');b.className='g';b.textContent=t;b.onclick=()=>{q.value=t;draw()};$('ch').appendChild(b)});
+fetch(API+'/status/models?type=image').then(r=>r.json()).then(L=>{MODELS=L;L.slice().sort((a,b)=>b.count-a.count).slice(0,14).forEach(x=>{if([...mdl.options].some(z=>z.value==x.name))return;const o=document.createElement('option');o.value=x.name;o.textContent=x.name+' · '+x.count+' GPUs'+(x.eta?' · ~'+Math.round(x.eta)+'s':'');mdl.appendChild(o)})}).catch(()=>{});
+['A lighthouse keeper mending a net','A dragon guarding a castle on a hill at sunset','A robot holding a red balloon','Three cats sleeping on a sofa','A cozy house next to a winding river with two pine trees','A pirate ship sailing under a full moon'].forEach(t=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{q.value=t;draw()};$('ch').appendChild(b)});
+(async()=>{
+const o=LS.get('sk_last');if(o&&o.src){try{const b=await (await fetch(o.src)).blob();await gPut({id:'old_'+o.when,group:'old_'+o.when,idx:0,when:o.when||1,prompt:o.prompt,style:o.style,model:o.model,dim:o.dim,w:o.w,h:o.h,blob:b,url:null})}catch(e){}LS.del('sk_last')}
+const all=await refreshGal(),j0=LS.get('sk_job');
+if(j0&&j0.id&&Date.now()-j0.t0<3*3600e3){KEY=curKey();q.value=j0.prompt;sty.value=j0.style;sh.value=j0.dim;setModel(j0.model);if([...num.options].some(x=>x.value==j0.num))num.value=j0.num;st.textContent='Picking up your drawing…';follow(j0,++tid)}
+else{if(j0)LS.del('sk_job');lastShow(all);if(all[0]){q.value=all[0].prompt;sty.value=all[0].style;sh.value=all[0].dim;st.textContent='Your last drawing'+(all.filter(e=>e.group==all[0].group).length>1?'s':'')+'.'}}
+})();
 })();
 </script></body></html>
